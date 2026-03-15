@@ -1,0 +1,38 @@
+{
+  "PRICING_PLAN_RESULT_NOT_FOUND": {
+    "message": "该配置组合在当前地域不可用",
+    "suggestion": "建议更换地域或调整实例规格，使用 'quoter.py modules <product>' 查看可用配置"
+  },
+  "ProductNotFind": {
+    "message": "产品代码错误或该产品不支持询价",
+    "suggestion": "运行 'quoter.py products' 查看可用产品列表"
+  },
+  "MissingParameter": {
+    "message": "缺少必要的 API 参数",
+    "suggestion": "运行 'quoter.py info <product>' 查看参数要求"
+  },
+  "InvalidParameter": {
+    "message": "参数值无效",
+    "suggestion": "检查参数格式和取值范围，运行 'quoter.py info <product>' 查看参数说明"
+  },
+  "InvalidInstanceType.NotFound": {
+    "message": "实例规格不存在",
+    "suggestion": "请检查实例规格拼写或更换规格"
+  },
+  "Throttling": {
+    "message": "API 请求频率过高",
+    "suggestion": "系统将自动重试，请稍候"
+  },
+  "Forbidden.RAM": {
+    "message": "RAM 权限不足",
+    "suggestion": "请确认 AK/SK 对应的 RAM 用户具有 BSS OpenAPI 的访问权限"
+  },
+  "InvalidAccessKeyId.NotFound": {
+    "message": "AccessKeyId 无效",
+    "suggestion": "请检查环境变量 ALIBABA_CLOUD_ACCESS_KEY_ID 是否正确"
+  },
+  "SignatureDoesNotMatch": {
+    "message": "签名验证失败",
+    "suggestion": "请检查环境变量 ALIBABA_CLOUD_ACCESS_KEY_SECRET 是否正确"
+  }
+}
