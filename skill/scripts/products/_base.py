@@ -83,7 +83,7 @@ def coerce_types(product, params):
     Returns:
         params dict with types coerced.
     """
-    type_map = {"string": str, "int": int, "float": float}
+    type_map = {"string": str, "int": int, "float": float, "bool": bool}
 
     for p in product.get("params", []):
         name = p["name"]
