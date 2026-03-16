@@ -99,6 +99,60 @@ def cmd_info(args):
     return 0
 
 
+def _is_local_calculation_product(modules):
+    """Check if product uses local calculation (not BSS API)."""
+    return modules and len(modules) == 1 and modules[0].get("module_code") == "__LOCAL_CALCULATION__"
+
+
+def _format_bailian_price(result):
+    """Format bailian price calculation result as Markdown.
+
+    Args:
+        result: dict from bailian.calculate_price()
+
+    Returns Markdown string.
+    """
+    lines = ["# 百炼大模型报价", ""]
+
+    # Configuration summary
+    lines.append("## 配置摘要")
+    lines.append(f"- 模型: {result['model']}")
+    lines.append(f"- 地域: {result['region']}")
+    lines.append(f"- 输入 Token: {result['input_tokens']:,}")
+    lines.append(f"- 输出 Token: {result['output_tokens']:,}")
+    lines.append(f"- 思考模式: {'是' if result['thinking'] else '否'}")
+    lines.append(f"- Batch 调用: {'是' if result['batch'] else '否'}")
+    if result.get("context_cache"):
+        lines.append(f"- 上下文缓存: 是")
+    lines.append("")
+
+    # Price breakdown
+    lines.append("## 价格明细")
+    lines.append("| 项目 | Token 数 | 单价(元/百万) | 小计(元) |")
+    lines.append("|------|---------|--------------|---------|")
+    lines.append(f"| 输入 | {result['input_tokens']:,} | {result['input_unit_price']:.2f} | {result['input_price']:.2f} |")
+    lines.append(f"| 输出 | {result['output_tokens']:,} | {result['output_unit_price']:.2f} | {result['output_price']:.2f} |")
+    lines.append("")
+
+    # Discounts
+    if result.get("discounts_applied"):
+        lines.append("### 已应用折扣")
+        for discount in result["discounts_applied"]:
+            lines.append(f"- {discount}")
+        lines.append("")
+
+    # Total
+    lines.append("## 总价")
+    lines.append(f"**{result['total_price']:.2f} 元**")
+    lines.append("")
+
+    # Footer
+    lines.append("---")
+    lines.append("价格数据最后更新: 2026-03-11")
+
+    return "\n".join(lines)
+
+
 def cmd_price(args):
     """Query product price using registry-based architecture."""
     product_code = args.product
@@ -137,10 +191,22 @@ def cmd_price(args):
         print(f"错误: 参数构建失败: {e}")
         return 1
 
-    # 8. Resolve ProductType
+    # 8. Check if this is a local calculation product (e.g., bailian)
+    if _is_local_calculation_product(modules):
+        # Import bailian module for local calculation
+        try:
+            from products.bailian import calculate_price
+            result = calculate_price(params)
+            print(_format_bailian_price(result))
+            return 0
+        except Exception as e:
+            print(f"错误: 价格计算失败: {e}")
+            return 1
+
+    # 9. Resolve ProductType
     product_type = resolve_product_type(product, params)
 
-    # 9. Create client and call BSS API
+    # 10. Create client and call BSS API
     try:
         client = bss_client.create_client()
     except bss_client.CredentialError as e:
@@ -165,7 +231,7 @@ def cmd_price(args):
                 product_type=product_type,
             )
 
-        # 10. Format output
+        # 11. Format output
         config_summary = product["format_summary"](params)
         result = formatters.format_price_result(
             product_name=product["display_name"],

@@ -9,7 +9,20 @@ description: >
 
 # Alibaba Cloud Quoter
 
-Query real-time Alibaba Cloud product prices via BSS OpenAPI. Supports 6 products: ECS, RDS, SLB, EIP, OSS, CDN.
+Query real-time Alibaba Cloud product prices via BSS OpenAPI. Supports 7 products: ECS, RDS, SLB, EIP, OSS, CDN, Bailian (百炼大模型).
+
+## Products
+
+### BSS API Products (实时价格)
+- **ECS** - 云服务器
+- **RDS** - 云数据库
+- **SLB** - 负载均衡
+- **EIP** - 弹性公网IP
+- **OSS** - 对象存储
+- **CDN** - 内容分发网络
+
+### Local Calculation Products (静态定价表)
+- **Bailian** - 百炼大模型（通义千问系列）
 
 ## Prerequisites
 
@@ -138,6 +151,25 @@ python3 scripts/quoter.py price cdn \
   --duration 1
 ```
 
+### Query Bailian (百炼大模型) price
+```bash
+# 基础查询
+python3 scripts/quoter.py price bailian \
+  --params '{"model":"qwen3-max","input_tokens":100000,"output_tokens":50000}'
+
+# 指定地域
+python3 scripts/quoter.py price bailian \
+  --params '{"model":"qwen3-max","region":"global","input_tokens":100000,"output_tokens":50000}'
+
+# Batch 调用（50% 折扣）
+python3 scripts/quoter.py price bailian \
+  --params '{"model":"qwen3-max","input_tokens":100000,"output_tokens":50000,"batch":true}'
+
+# 思考模式（部分模型支持）
+python3 scripts/quoter.py price bailian \
+  --params '{"model":"qwen3.5-plus","input_tokens":100000,"output_tokens":50000,"thinking":true}'
+```
+
 ## Parameter Mapping
 
 Map natural language to `--params` JSON keys:
@@ -154,6 +186,8 @@ Map natural language to `--params` JSON keys:
 | "弹性IP/公网IP" | eip | product=eip |
 | "对象存储" | oss | product=oss |
 | "CDN加速" | cdn | product=cdn |
+| "百炼大模型" | bailian | product=bailian |
+| "通义千问" | bailian | `{"model":"qwen3-max"}` |
 | "杭州/华东1" | any | `--region cn-hangzhou` |
 | "北京/华北2" | any | `--region cn-beijing` |
 | "上海/华东2" | any | `--region cn-shanghai` |
