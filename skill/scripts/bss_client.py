@@ -204,15 +204,25 @@ def create_client():
     return (ak, sk)
 
 
-def query_product_list(client):
+def query_product_list(client, page_num=1, page_size=50):
     """Query available product list from BSS API.
+
+    Args:
+        client: (ak, sk) tuple
+        page_num: Page number for pagination (default: 1)
+        page_size: Number of products per page (default: 50)
 
     Returns list of dicts with keys: product_code, product_name, product_type.
     """
     ak, sk = client
 
+    params = {
+        "PageNum": str(page_num),
+        "PageSize": str(page_size),
+    }
+
     try:
-        body = _call_api("QueryProductList", {}, ak, sk)
+        body = _call_api("QueryProductList", params, ak, sk)
     except BssApiError:
         raise
     except Exception as e:
