@@ -119,6 +119,63 @@ CDN pricing modules should be discovered dynamically via `quoter.py modules cdn`
 
 ---
 
+## Elasticsearch (ProductCode: `elasticsearch`)
+
+### ProductType
+
+- **Subscription (包年包月)**: `elasticsearchpre`
+- **PayAsYouGo (按量付费)**: `elasticsearch`
+
+### Modules (MVP Version)
+
+| ModuleCode | Config Format | Required |
+|------------|--------------|----------|
+| NodeSpec | `NodeSpec:{spec},Region:{region},NodeAmount:{amount}` | Yes |
+| Disk | `DataDiskType:{type},PerformanceLevel:{level},Region:{region},NodeAmount:{amount},Disk:{size}` | Yes |
+
+### Key Parameter Values
+
+**NodeSpec (数据节点规格)**:
+- `elasticsearch.g7.xlarge` - 4核16G (通用型)
+- `elasticsearch.g7.2xlarge` - 8核32G (通用型)
+- `elasticsearch.g7.4xlarge` - 16核64G (通用型)
+- `elasticsearch.r7.xlarge` - 4核32G (内存型)
+- `elasticsearch.r7.2xlarge` - 8核64G (内存型)
+- `elasticsearch.c7.xlarge` - 4核8G (计算型)
+
+**DataDiskType (存储类型)**: `cloud_ssd` (SSD云盘), `cloud_essd` (ESSD云盘), `cloud_efficiency` (高效云盘)
+
+**PerformanceLevel (ESSD性能级别)**: `PL0`, `PL1`, `PL2`, `PL3` (仅在使用 cloud_essd 时有效)
+
+**NodeAmount (节点数量)**: 2-50，建议至少3个保证高可用
+
+**Disk (单节点存储)**: 20-20480 GB
+
+### Example Usage
+
+```bash
+# 包年包月询价
+python scripts/quoter.py price elasticsearch \
+  --region cn-hangzhou \
+  --node-spec elasticsearch.g7.xlarge \
+  --node-amount 3 \
+  --disk-type cloud_ssd \
+  --disk-size 100 \
+  --subscription-type Subscription
+
+# 按量付费询价
+python scripts/quoter.py price elasticsearch \
+  --region cn-hangzhou \
+  --node-spec elasticsearch.r7.2xlarge \
+  --node-amount 5 \
+  --disk-type cloud_essd \
+  --disk-size 500 \
+  --performance-level PL2 \
+  --subscription-type PayAsYouGo
+```
+
+---
+
 ## Discovering Module Parameters
 
 For any product, use the `modules` command to discover available pricing modules and their config options:
