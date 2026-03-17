@@ -259,6 +259,76 @@ python3 scripts/quoter.py price waf \
 
 ---
 
+## Kafka (ProductCode: `alikafka`)
+
+### Modules
+
+#### 包年包月 (Subscription, ProductType: `alikafka_pre`)
+
+| ModuleCode | Config Format | Required |
+|------------|--------------|----------|
+| PartitionNum | `PartitionNum:{partition_num},SpecType:{spec_type},RegionId:{region}` | Yes |
+| TopicQuota | `PartitionNum:{partition_num},TopicQuota:{topic_quota},RegionId:{region}` | Yes |
+| IoMaxSpec | `SpecType:{spec_type},IoMaxSpec:{io_max_spec},RegionId:{region}` | Yes |
+| DiskSize | `DiskType:{disk_type},DiskSize:{disk_size},RegionId:{region}` | Yes |
+| EipMax | `EipMax:{eip_max},RegionId:{region}` | No |
+
+#### 按量付费 (PayAsYouGo, ProductType: `alikafka_post`)
+
+| ModuleCode | Config Format | Required |
+|------------|--------------|----------|
+| PartitionNum | `PartitionNum:{partition_num},SpecType:{spec_type},RegionId:{region}` | Yes |
+| TopicQuota | `PartitionNum:{partition_num},TopicQuota:{topic_quota},RegionId:{region}` | Yes |
+| IoMaxSpec | `SpecType:{spec_type},IoMaxSpec:{io_max_spec},RegionId:{region}` | Yes |
+| DiskSize | `DiskType:{disk_type},DiskSize:{disk_size},RegionId:{region}` | Yes |
+| EipMax | `EipMax:{eip_max},RegionId:{region}` | No |
+
+### Key Parameter Values
+
+**spec_type (规格类型)**:
+- `normal` - 标准版（高写）
+- `professional` - 专业版（高写）
+- `professionalForHighRead` - 专业版（高读）
+
+**disk_type (磁盘类型)**:
+- `0` - 高效云盘
+- `1` - SSD
+- `5` - ESSD_PL0
+- `6` - ESSD_PL1
+
+**io_max_spec (流量规格)**:
+- 高写版 (normal/professional): `alikafka.hw.2xlarge`, `alikafka.hw.3xlarge`, `alikafka.hw.6xlarge`, `alikafka.hw.9xlarge`, `alikafka.hw.12xlarge`
+- 高读版 (professionalForHighRead): `alikafka.hr.2xlarge`, `alikafka.hr.3xlarge`, `alikafka.hr.6xlarge`, `alikafka.hr.9xlarge`, `alikafka.hr.12xlarge`
+
+**参数范围**:
+- `partition_num`: 0-40000
+- `topic_quota`: 1-9999
+- `disk_size`: ≥100 (GB)
+- `eip_max`: 0-2500 (MB/s), 0表示不开通
+
+### Example Usage
+
+```bash
+# 包年包月 - 标准版基础配置
+python3 scripts/quoter.py price alikafka \
+  --params '{"spec_type":"normal","partition_num":100,"topic_quota":50,"disk_type":"1","disk_size":500,"region":"cn-hangzhou"}' \
+  --billing subscription \
+  --duration 1
+
+# 包年包月 - 专业版高读版带公网
+python3 scripts/quoter.py price alikafka \
+  --params '{"spec_type":"professionalForHighRead","partition_num":500,"topic_quota":100,"disk_type":"6","disk_size":1000,"eip_max":100,"region":"cn-hangzhou"}' \
+  --billing subscription \
+  --duration 1
+
+# 按量付费
+python3 scripts/quoter.py price alikafka \
+  --params '{"spec_type":"professional","partition_num":1000,"topic_quota":200,"disk_type":"6","disk_size":2000,"region":"cn-hangzhou"}' \
+  --billing payAsYouGo
+```
+
+---
+
 ## Discovering Module Parameters
 
 For any product, use the `modules` command to discover available pricing modules and their config options:
