@@ -9,7 +9,7 @@ description: >
 
 # Alibaba Cloud Quoter
 
-Query real-time Alibaba Cloud product prices via BSS OpenAPI. Supports 7 products: ECS, RDS, SLB, EIP, OSS, CDN, Bailian (百炼大模型).
+Query real-time Alibaba Cloud product prices via BSS OpenAPI. Supports 8 products: ECS, RDS, SLB, EIP, OSS, CDN, WAF, Bailian (百炼大模型).
 
 ## Products
 
@@ -20,6 +20,7 @@ Query real-time Alibaba Cloud product prices via BSS OpenAPI. Supports 7 product
 - **EIP** - 弹性公网IP
 - **OSS** - 对象存储
 - **CDN** - 内容分发网络
+- **WAF** - Web应用防火墙
 
 ### Local Calculation Products (静态定价表)
 - **Bailian** - 百炼大模型（通义千问系列）
@@ -151,6 +152,26 @@ python3 scripts/quoter.py price cdn \
   --duration 1
 ```
 
+### Query WAF price
+```bash
+# 包年包月 - 基础企业版
+python3 scripts/quoter.py price waf \
+  --params '{"billing_mode":"subscription","package_code":"version_4","region":"cn-hangzhou"}' \
+  --billing subscription \
+  --duration 1
+
+# 包年包月 - 带扩展功能
+python3 scripts/quoter.py price waf \
+  --params '{"billing_mode":"subscription","package_code":"version_4","region":"cn-hangzhou","qps_package":10,"bot_web":1,"apisec":1}' \
+  --billing subscription \
+  --duration 1
+
+# 按量付费
+python3 scripts/quoter.py price waf \
+  --params '{"billing_mode":"payasyougo","secu":100,"region":"cn-hangzhou"}' \
+  --billing payAsYouGo
+```
+
 ### Query Bailian (百炼大模型) price
 ```bash
 # 基础查询
@@ -186,6 +207,7 @@ Map natural language to `--params` JSON keys:
 | "弹性IP/公网IP" | eip | product=eip |
 | "对象存储" | oss | product=oss |
 | "CDN加速" | cdn | product=cdn |
+| "WAF防火墙" | waf | product=waf |
 | "百炼大模型" | bailian | product=bailian |
 | "通义千问" | bailian | `{"model":"qwen3-max"}` |
 | "杭州/华东1" | any | `--region cn-hangzhou` |

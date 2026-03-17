@@ -176,6 +176,89 @@ python scripts/quoter.py price elasticsearch \
 
 ---
 
+## WAF (ProductCode: `waf`)
+
+### ProductType
+
+- **Subscription (包年包月)**: `waf_v3prepaid_public_cn`
+- **PayAsYouGo (按量付费)**: `waf_v2_public_cn`
+
+### Modules
+
+#### 包年包月 (Subscription)
+
+| ModuleCode | Config Format | Required |
+|------------|--------------|----------|
+| PackageCode | `Region:{region},PackageCode:{package_code}` | Yes |
+| QPSPackage | `botWeb:{0/1},apisec:{0/1},botApp:{0/1},Region:{region},QPSPackage:{qps_package}` | No |
+| ExtDomainPackage | `ExtDomainPackage:{ext_domain_package},Region:{region},PackageCode:{package_code}` | No |
+| botWeb | `botWeb:1,Region:{region},bot_version:1,PackageCode:{package_code}` | No |
+| botApp | `botApp:1,Region:{region},bot_version:1` | No |
+| apisec | `apisec:1,Region:{region},PackageCode:{package_code}` | No |
+| domainVip | `Region:{region},domainVip:{domain_vip}` | No |
+| LogStorage | `Region:{region},LogStorage:{log_storage}` | No |
+| WafGslb | `Region:{region},WafGslb:1` | No |
+| HybridCloudNode | `Region:{region},PackageCode:{package_code},HybridCloudNode:{hybrid_cloud_node}` | No |
+| BlueTeaming | `BlueTeaming:1,Region:{region},PackageCode:{package_code}` | No |
+| spikeThrottle | `Region:{region},spikeThrottle:{spike_throttle}` | No |
+| ElasticQps | `botWeb:{0/1},apisec:{0/1},botApp:{0/1},Region:{region},ElasticQps:{elastic_qps}` | No |
+
+#### 按量付费 (PayAsYouGo)
+
+| ModuleCode | Config Format | Required |
+|------------|--------------|----------|
+| SeCU | `SeCU:{secu},Region:{region}` | Yes |
+
+### Key Parameter Values
+
+**billing_mode (计费模式)**: `subscription` (包年包月), `payasyougo` (按量付费)
+
+**package_code (版本，包年包月必填)**:
+- `version_3` - 高级版
+- `version_4` - 企业版
+- `version_5` - 旗舰版
+
+**secu (SeCU数量，按量付费必填)**: ≥1
+
+**扩展参数 (包年包月可选)**:
+- `qps_package` - QPS扩展包数量 (≥0)
+- `ext_domain_package` - 域名扩展包数量 (≥0)
+- `domain_vip` - 独享IP数量 (≥0)
+- `log_storage` - 日志存储容量GB (≥0)
+- `hybrid_cloud_node` - 混合云扩展节点数 (≥0)
+- `spike_throttle` - 洪峰限流配置 (≥0)
+- `elastic_qps` - 弹性后付费QPS (≥0)
+
+**安全功能开关 (包年包月可选)**:
+- `bot_web` - Bot Web防护 (true/false)
+- `bot_app` - Bot APP防护 (true/false)
+- `apisec` - API安全防护 (true/false)
+- `waf_gslb` - 智能负载均衡 (true/false)
+- `blue_teaming` - 重保场景 (true/false)
+
+### Example Usage
+
+```bash
+# 包年包月 - 基础企业版
+python3 scripts/quoter.py price waf \
+  --params '{"billing_mode":"subscription","package_code":"version_4","region":"cn-hangzhou"}' \
+  --billing subscription \
+  --duration 1
+
+# 包年包月 - 带扩展功能
+python3 scripts/quoter.py price waf \
+  --params '{"billing_mode":"subscription","package_code":"version_4","region":"cn-hangzhou","qps_package":10,"bot_web":1,"apisec":1}' \
+  --billing subscription \
+  --duration 1
+
+# 按量付费
+python3 scripts/quoter.py price waf \
+  --params '{"billing_mode":"payasyougo","secu":100,"region":"cn-hangzhou"}' \
+  --billing payAsYouGo
+```
+
+---
+
 ## Discovering Module Parameters
 
 For any product, use the `modules` command to discover available pricing modules and their config options:
