@@ -392,6 +392,63 @@ python3 scripts/quoter.py price ons \
 
 ---
 
+## NAS (ProductCode: `nas`)
+
+### Modules
+
+#### 按量付费 (PayAsYouGo, ProductType: `naspost`)
+
+| ModuleCode | Config Format | Required |
+|------------|--------------|----------|
+| FileSystem | `Region:{region},FileSystemType:{type},StorageType:{storage},ProtocolType:{protocol}` | Yes |
+| Capacity | `Region:{region},Capacity:{capacity}` | Yes |
+| DataTransfer | `Region:{region},DataTransfer:{transfer}` | No |
+
+#### 包年包月 (Subscription)
+
+**注意**: NAS 主要支持按量付费，包年包月模式需进一步确认。
+
+### Key Parameter Values
+
+**file_system_type (文件系统类型)**:
+- `standard` - 通用型 NAS
+- `extreme` - 极速型 NAS
+- `cpfs` - 并行文件系统 CPFS
+
+**storage_type (存储类型)**:
+- `Performance` - 性能型
+- `Capacity` - 容量型
+
+**protocol_type (协议类型)**:
+- `NFS` - Network File System（Linux/Unix）
+- `SMB` - Server Message Block（Windows）
+
+**容量限制**:
+- 通用型 NAS: 100GB - 10PB
+- 极速型 NAS: 100GB - 256TB（最大 256*1024 GB）
+- CPFS: 4TB - 1PB（最小 4096 GB）
+
+### Example Usage
+
+```bash
+# 按量付费 - 通用型性能版
+python3 scripts/quoter.py price nas \
+  --params '{"file_system_type":"standard","storage_type":"Performance","protocol_type":"NFS","capacity":100,"region":"cn-hangzhou"}' \
+  --billing payAsYouGo
+
+# 按量付费 - 极速型带数据传出
+python3 scripts/quoter.py price nas \
+  --params '{"file_system_type":"extreme","storage_type":"Performance","protocol_type":"NFS","capacity":1000,"data_transfer":500,"region":"cn-hangzhou"}' \
+  --billing payAsYouGo
+
+# 按量付费 - CPFS（容量需≥4TB）
+python3 scripts/quoter.py price nas \
+  --params '{"file_system_type":"cpfs","storage_type":"Performance","protocol_type":"NFS","capacity":4096,"region":"cn-hangzhou"}' \
+  --billing payAsYouGo
+```
+
+---
+
 ## Discovering Module Parameters
 
 For any product, use the `modules` command to discover available pricing modules and their config options:
