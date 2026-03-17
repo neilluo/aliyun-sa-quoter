@@ -329,6 +329,69 @@ python3 scripts/quoter.py price alikafka \
 
 ---
 
+## RocketMQ 5.0 (ProductCode: `ons`)
+
+### Modules
+
+#### 包年包月 (Subscription, ProductType: `ons_rmqsub_public_cn`)
+
+| ModuleCode | Config Format | Required |
+|------------|--------------|----------|
+| msg_process_spec | `chip_type:{chip_type},region:{region},msg_process_spec:{spec}` | Yes |
+| msg_store_spec | `msg_store_spec:{spec},region:{region}` | Yes |
+| flow_out_bandwidth | `flow_out_bandwidth:{bandwidth},flow_out_type:{type},region:{region}` | No |
+| topic_paid | `region:{region},series_type:{series}` | No |
+
+#### 按量付费 (PayAsYouGo, ProductType: `ons_rmqpost_public_cn`)
+
+| ModuleCode | Config Format | Required |
+|------------|--------------|----------|
+| msg_process_spec | `chip_type:{chip_type},region:{region},msg_process_spec:{spec}` | Yes |
+| msg_store_spec | `msg_store_spec:{spec},region:{region}` | Yes |
+| flow_out_bandwidth | `flow_out_bandwidth:{bandwidth},flow_out_type:{type},region:{region}` | No |
+| topic_paid | `region:{region},series_type:{series}` | No |
+
+### Key Parameter Values
+
+**chip_type (架构类型)**: `x86`, `arm`
+
+**msg_process_spec (消息收发计算规格)**:
+- x86: `rmq.su.2xlarge` (8C16G), `rmq.su.4xlarge` (16C32G), `rmq.su.6xlarge` (24C48G), `rmq.su.8xlarge` (32C64G)
+- arm: `rmq.su.2xlarge` (8C16G), `rmq.su.4xlarge` (16C32G), `rmq.su.6xlarge` (24C48G)
+
+**msg_store_spec (消息存储规格)**: `rmq.ssu.2xlarge`, `rmq.ssu.4xlarge`, `rmq.ssu.6xlarge`, `rmq.ssu.8xlarge`
+
+**series_type (系列类型)**: `standard` (标准版), `professional` (专业版)
+
+**flow_out_type (公网计费类型)**: `payByTraffic` (按流量), `fixedBandwidth` (固定带宽)
+
+**参数范围**:
+- `flow_out_bandwidth`: 0-600 (MB/s), 0表示不开通
+- `topic_paid`: ≥0
+
+### Example Usage
+
+```bash
+# 包年包月 - x86标准版基础配置
+python3 scripts/quoter.py price ons \
+  --params '{"chip_type":"x86","msg_process_spec":"rmq.su.2xlarge","msg_store_spec":"rmq.ssu.2xlarge","series_type":"standard","region":"cn-hangzhou"}' \
+  --billing subscription \
+  --duration 1
+
+# 包年包月 - arm专业版带公网和付费Topic
+python3 scripts/quoter.py price ons \
+  --params '{"chip_type":"arm","msg_process_spec":"rmq.su.4xlarge","msg_store_spec":"rmq.ssu.4xlarge","series_type":"professional","flow_out_bandwidth":100,"flow_out_type":"payByTraffic","topic_paid":10,"region":"cn-hangzhou"}' \
+  --billing subscription \
+  --duration 1
+
+# 按量付费
+python3 scripts/quoter.py price ons \
+  --params '{"chip_type":"x86","msg_process_spec":"rmq.su.6xlarge","msg_store_spec":"rmq.ssu.6xlarge","series_type":"professional","region":"cn-hangzhou"}' \
+  --billing payAsYouGo
+```
+
+---
+
 ## Discovering Module Parameters
 
 For any product, use the `modules` command to discover available pricing modules and their config options:
