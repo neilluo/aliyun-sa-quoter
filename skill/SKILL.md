@@ -265,6 +265,36 @@ When the user specifies vCPU and memory requirements (e.g., "16核64G"), **ALWAY
 - **API errors**: Script returns friendly Chinese error messages. If a product query fails, suggest using `quoter.py modules <product>` to discover valid parameters.
 - **Unknown instance type**: Suggest the user check Alibaba Cloud documentation or use the ECS Instance Type Reference table above.
 
+## Known Limitations
+
+### Unsupported Products
+
+The following products are NOT supported by BSS OpenAPI:
+
+| Product | Reason |
+|---------|--------|
+| **alikafka** | Not available in BSS API |
+| **elasticsearch** | Not available in BSS API |
+| **polardb** | Only PolarDB-X 1.0 (drds) is supported |
+
+### Partially Supported Products
+
+| Product | Limitation |
+|---------|-----------|
+| **CDN** | Only PayAsYouGo billing; module configuration is complex |
+| **OSS** | Only PayAsYouGo billing |
+| **EIP** | Only Subscription billing |
+| **SLB** | Only Subscription billing |
+| **NAS** | Only PayAsYouGo billing |
+
+### Product Code Mappings
+
+Some products use different ProductCode in BSS API:
+
+| User-facing Code | BSS API Code |
+|------------------|--------------|
+| polardb | drds (PolarDB-X 1.0) |
+
 ## Detailed Reference
 
 For complete ModuleCode, Config format, and parameter values for each product, see [product-reference.md](product-reference.md).
