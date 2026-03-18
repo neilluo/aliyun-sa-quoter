@@ -22,12 +22,8 @@ NAME: str = "RDS"
 DISPLAY_NAME: str = "RDS 云数据库"
 CATEGORY: str = Category.DATABASE
 
-# 动态 ProductType：根据系列切换
-PRODUCT_TYPE: Optional[Union[str, Callable]] = lambda p: (
-    ProductType.RDS_BASIC if p.get("series") == "Basic"
-    else ProductType.RDS_READONLY if p.get("series") == "Readonly"
-    else ProductType.RDS_STANDARD
-)
+# BSS API requires ProductType='rds' for RDS queries
+PRODUCT_TYPE: Optional[Union[str, Callable]] = "rds"
 
 
 # =============================================================================
