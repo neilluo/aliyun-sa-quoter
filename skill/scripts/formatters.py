@@ -66,10 +66,28 @@ def format_price_result(product_name, config_summary, price_data, billing_method
             if cost and float(cost) > 0:
                 lines.append(f"| {md['module_code']} | {float(cost):.2f} |")
 
-    # Total
-    trade = price_data.get("trade_amount") or price_data.get("original_amount") or 0
-    original = price_data.get("original_amount") or 0
+    # Total - calculate from module_details if top-level fields are null
+    # BSS API may return null for OriginalAmount/TradeAmount for some products (e.g., ECS)
+    # In such cases, we aggregate from module_details
+    original = price_data.get("original_amount")
+    trade = price_data.get("trade_amount")
     discount = price_data.get("discount_amount") or 0
+
+    # If top-level amounts are null, calculate from module_details
+    if original is None and price_data.get("module_details"):
+        original = sum(
+            (md.get("original_cost") or 0) for md in price_data["module_details"]
+        )
+    if trade is None and price_data.get("module_details"):
+        trade = sum(
+            (md.get("cost_after_discount") or md.get("original_cost") or 0)
+            for md in price_data["module_details"]
+        )
+
+    # Fallback to 0 if still None
+    original = original or 0
+    trade = trade or 0
+    discount = discount or 0
 
     lines.append("")
     if float(discount) > 0:
