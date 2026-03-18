@@ -6,8 +6,13 @@ ProductType: "" (empty)
 API docs: https://api.aliyun.com/document/BssOpenApi/2017-12-14/GetSubscriptionPrice
 """
 
+from typing import Any, Dict, List, Optional, Union
 
-def _get_product_type(params):
+from ai_friendly.constants import Region, Category, DiskType, Architecture, Edition
+from ai_friendly.types import ParamDef, ModuleSpec
+
+
+def _get_product_type(params: Dict[str, Any]) -> str:
     """Redis uses empty ProductType.
 
     Args:
@@ -19,7 +24,7 @@ def _get_product_type(params):
     return ""
 
 
-def build_modules(params):
+def build_modules(params: Dict[str, Any]) -> List[Dict[str, str]]:
     """Build Redis pricing module list.
 
     Based on BSS API response, Redis only has InstanceClass module.
@@ -32,7 +37,7 @@ def build_modules(params):
         list: 模块列表，每个模块包含 module_code, config, price_type
     """
     instance_class = params.get("instance_class", "redis.master.small.default")
-    region = params.get("region", "cn-hangzhou")
+    region = params.get("region", Region.HANGZHOU)
 
     modules = [
         {
@@ -45,7 +50,7 @@ def build_modules(params):
     return modules
 
 
-def format_summary(params):
+def format_summary(params: Dict[str, Any]) -> Dict[str, str]:
     """Build human-readable config summary.
 
     Args:
@@ -54,18 +59,18 @@ def format_summary(params):
     Returns:
         dict: 配置摘要字典，包含版本、架构、规格等信息
     """
-    edition = params.get("edition", "community")
-    architecture = params.get("architecture", "standard")
+    edition = params.get("edition", Edition.COMMUNITY)
+    architecture = params.get("architecture", Architecture.STANDARD)
 
     edition_map = {
-        "community": "社区版",
-        "enterprise": "企业版 (Tair)",
+        Edition.COMMUNITY: "社区版",
+        Edition.ENTERPRISE: "企业版 (Tair)",
     }
 
     arch_map = {
-        "standard": "标准架构",
-        "cluster": "集群架构",
-        "rwsplit": "读写分离架构",
+        Architecture.STANDARD: "标准架构",
+        Architecture.CLUSTER: "集群架构",
+        Architecture.RWSPLIT: "读写分离架构",
     }
 
     summary = {
@@ -74,13 +79,13 @@ def format_summary(params):
         "规格": params.get("instance_class", "redis.master.small.default"),
     }
 
-    if architecture == "cluster":
+    if architecture == Architecture.CLUSTER:
         summary["分片数"] = str(params.get("shard_count", 1))
 
     return summary
 
 
-def validate(params):
+def validate(params: Dict[str, Any]) -> List[str]:
     """Validate Redis parameters.
 
     Args:
@@ -91,18 +96,18 @@ def validate(params):
     """
     errors = []
 
-    edition = params.get("edition", "community")
-    valid_editions = ["community", "enterprise"]
+    edition = params.get("edition", Edition.COMMUNITY)
+    valid_editions = Edition.ALL
     if edition not in valid_editions:
         errors.append(f"版本必须是: {', '.join(valid_editions)}")
 
-    architecture = params.get("architecture", "standard")
-    valid_archs = ["standard", "cluster", "rwsplit"]
+    architecture = params.get("architecture", Architecture.STANDARD)
+    valid_archs = Architecture.ALL
     if architecture not in valid_archs:
         errors.append(f"架构必须是: {', '.join(valid_archs)}")
 
     # 集群架构需要分片数
-    if architecture == "cluster":
+    if architecture == Architecture.CLUSTER:
         shard_count = params.get("shard_count", 1)
         if shard_count and int(shard_count) < 2:
             errors.append("集群架构至少需要 2 个分片")
@@ -114,28 +119,28 @@ PRODUCT = {
     "code": "redisa",
     "name": "Redis",
     "display_name": "云数据库 Redis 版",
-    "product_type": "",
-    "category": "database",
+    "product_type": _get_product_type,
+    "category": Category.DATABASE,
     "params": [
         {
             "name": "edition",
             "label": "版本",
             "type": "string",
             "required": False,
-            "default": "community",
-            "choices": ["community", "enterprise"],
+            "default": Edition.COMMUNITY,
+            "choices": Edition.ALL,
             "description": "community (社区版), enterprise (企业版 Tair)",
-            "examples": ["community", "enterprise"],
+            "examples": [Edition.COMMUNITY, Edition.ENTERPRISE],
         },
         {
             "name": "architecture",
             "label": "架构",
             "type": "string",
             "required": False,
-            "default": "standard",
-            "choices": ["standard", "cluster", "rwsplit"],
+            "default": Architecture.STANDARD,
+            "choices": Architecture.ALL,
             "description": "standard (标准架构), cluster (集群架构), rwsplit (读写分离)",
-            "examples": ["standard", "cluster"],
+            "examples": [Architecture.STANDARD, Architecture.CLUSTER],
         },
         {
             "name": "instance_class",

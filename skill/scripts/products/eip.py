@@ -7,8 +7,13 @@ API docs: https://api.aliyun.com/document/BssOpenApi/2017-12-14/GetSubscriptionP
 Note: Alibaba Cloud API uses "Bindwidth" spelling (not "Bandwidth")
 """
 
+from typing import Any, Dict, List, Optional, Union
 
-def build_modules(params):
+from ai_friendly.constants import Region, Category, DiskType
+from ai_friendly.types import ParamDef, ModuleSpec
+
+
+def build_modules(params: Dict[str, Any]) -> List[Dict[str, str]]:
     """Build EIP pricing module list."""
     bandwidth = params.get("bandwidth", 5)
     internet_charge_type = params.get("internet_charge_type", "PayByTraffic")
@@ -29,7 +34,7 @@ def build_modules(params):
     return modules
 
 
-def format_summary(params):
+def format_summary(params: Dict[str, Any]) -> Dict[str, str]:
     """Build human-readable config summary."""
     charge_type = params.get("internet_charge_type", "PayByTraffic")
     charge_text = "按流量" if charge_type == "PayByTraffic" else "按带宽"
@@ -44,7 +49,7 @@ PRODUCT = {
     "name": "EIP",
     "display_name": "EIP 弹性公网IP",
     "product_type": "eip",
-    "category": "network",
+    "category": Category.NETWORK,
     "params": [
         {
             "name": "bandwidth",

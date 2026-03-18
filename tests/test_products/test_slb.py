@@ -12,7 +12,7 @@ from conftest import (
     assert_valid_product, assert_valid_module_list,
 )
 from products.slb import PRODUCT, build_modules, validate
-from products._base import resolve_product_type
+from framework.base import resolve_product_type
 
 
 class TestSLBModules(unittest.TestCase):

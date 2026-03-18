@@ -55,7 +55,7 @@ def discover_products():
     """
     global _REGISTRY
 
-    products_dir = Path(__file__).parent / "products"
+    products_dir = Path(__file__).parent.parent / "products"
     if not products_dir.is_dir():
         print(f"警告: 产品目录不存在: {products_dir}", file=sys.stderr)
         return

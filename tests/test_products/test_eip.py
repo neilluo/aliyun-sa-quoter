@@ -12,7 +12,7 @@ from conftest import (
     assert_valid_product, assert_valid_module_list,
 )
 from products.eip import PRODUCT, build_modules
-from products._base import resolve_product_type
+from framework.base import resolve_product_type
 
 
 class TestEIPModules(unittest.TestCase):

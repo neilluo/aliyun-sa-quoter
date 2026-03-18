@@ -11,8 +11,8 @@ from conftest import (
     skip_without_credentials, create_test_client,
     assert_valid_product, assert_valid_module_list,
 )
-from products.elasticsearch import PRODUCT, build_modules, validate, _get_product_type, format_summary
-from products._base import resolve_product_type
+from products.elasticsearch import PRODUCT, build_modules, validate, format_summary
+from framework.base import resolve_product_type
 
 
 class TestElasticsearchModules(unittest.TestCase):

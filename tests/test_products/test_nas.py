@@ -8,7 +8,7 @@ from pathlib import Path
 scripts_dir = Path(__file__).parent.parent.parent / "skill" / "scripts"
 sys.path.insert(0, str(scripts_dir))
 
-from products.nas import build_modules, format_summary, validate, PRODUCT, _get_product_type
+from products.nas import build_modules, format_summary, validate, PRODUCT
 
 
 class TestBuildModules:

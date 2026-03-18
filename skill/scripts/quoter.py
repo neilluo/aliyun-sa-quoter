@@ -22,12 +22,12 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import bss_client
 import formatters
-import registry
+from framework import registry
 from errors import (
     CredentialError, ProductNotFoundError, ValidationError,
     BssApiError, format_error,
 )
-from products._base import (
+from framework.base import (
     resolve_product_type, fill_defaults, coerce_types, validate_params,
 )
 

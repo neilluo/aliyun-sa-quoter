@@ -6,7 +6,7 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "skill", "scripts"))
 
-from registry import discover_products, get_product, list_products, list_products_by_category, get_all_codes
+from framework.registry import discover_products, get_product, list_products, list_products_by_category, get_all_codes
 
 
 class TestRegistry(unittest.TestCase):

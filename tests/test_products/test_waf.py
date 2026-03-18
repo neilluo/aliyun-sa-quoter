@@ -12,7 +12,7 @@ from conftest import (
     assert_valid_product, assert_valid_module_list,
 )
 from products.waf import PRODUCT, build_modules, validate, format_summary
-from products._base import resolve_product_type
+from framework.base import resolve_product_type
 
 
 class TestWAFProductDefinition(unittest.TestCase):

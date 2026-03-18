@@ -6,8 +6,13 @@ ProductType: None (ECS does not require ProductType)
 API docs: https://api.aliyun.com/document/BssOpenApi/2017-12-14/GetSubscriptionPrice
 """
 
+from typing import Any, Dict, List, Optional, Union
 
-def _extract_instance_family(instance_type):
+from ai_friendly.constants import Region, Category, DiskType
+from ai_friendly.types import ParamDef, ModuleSpec
+
+
+def _extract_instance_family(instance_type: str) -> str:
     """Extract instance family from instance type, e.g. 'ecs.g7.xlarge' -> 'ecs.g7'."""
     parts = instance_type.split(".")
     if len(parts) >= 2:
@@ -15,11 +20,11 @@ def _extract_instance_family(instance_type):
     return instance_type
 
 
-def build_modules(params):
+def build_modules(params: Dict[str, Any]) -> List[Dict[str, str]]:
     """Build ECS pricing module list."""
     instance_type = params["instance_type"]
     image_os = params.get("image_os", "linux")
-    system_disk_category = params.get("system_disk_category", "cloud_essd")
+    system_disk_category = params.get("system_disk_category", DiskType.ESSD)
     system_disk_size = params.get("system_disk_size", 40)
     data_disk_category = params.get("data_disk_category")
     data_disk_size = params.get("data_disk_size", 0)
@@ -73,16 +78,16 @@ def build_modules(params):
     return modules
 
 
-def format_summary(params):
+def format_summary(params: Dict[str, Any]) -> Dict[str, str]:
     """Build human-readable config summary."""
     summary = {
         "实例规格": params["instance_type"],
         "操作系统": params.get("image_os", "linux"),
-        "系统盘": f"{params.get('system_disk_category', 'cloud_essd')} {params.get('system_disk_size', 40)}GB",
+        "系统盘": f"{params.get('system_disk_category', DiskType.ESSD)} {params.get('system_disk_size', 40)}GB",
     }
     data_disk_size = params.get("data_disk_size", 0)
     if data_disk_size and int(data_disk_size) > 0:
-        cat = params.get("data_disk_category") or params.get("system_disk_category", "cloud_essd")
+        cat = params.get("data_disk_category") or params.get("system_disk_category", DiskType.ESSD)
         summary["数据盘"] = f"{cat} {data_disk_size}GB"
     internet_bandwidth = params.get("internet_bandwidth", 0)
     if internet_bandwidth and int(internet_bandwidth) > 0:
@@ -90,7 +95,7 @@ def format_summary(params):
     return summary
 
 
-def validate(params):
+def validate(params: Dict[str, Any]) -> List[str]:
     """Validate ECS parameters."""
     errors = []
     data_disk_size = params.get("data_disk_size", 0)
@@ -110,7 +115,7 @@ PRODUCT = {
     "name": "ECS",
     "display_name": "ECS 云服务器",
     "product_type": None,
-    "category": "compute",
+    "category": Category.COMPUTE,
     "params": [
         {
             "name": "instance_type",
@@ -137,10 +142,10 @@ PRODUCT = {
             "label": "系统盘类型",
             "type": "string",
             "required": False,
-            "default": "cloud_essd",
-            "choices": ["cloud_essd", "cloud_ssd", "cloud_efficiency"],
+            "default": DiskType.ESSD,
+            "choices": [DiskType.ESSD, DiskType.SSD, DiskType.EFFICIENCY],
             "description": "系统盘类型：cloud_essd (ESSD), cloud_ssd (SSD), cloud_efficiency (高效云盘)",
-            "examples": ["cloud_essd"],
+            "examples": [DiskType.ESSD],
         },
         {
             "name": "system_disk_size",
@@ -158,9 +163,9 @@ PRODUCT = {
             "type": "string",
             "required": False,
             "default": None,
-            "choices": ["cloud_essd", "cloud_ssd", "cloud_efficiency"],
+            "choices": [DiskType.ESSD, DiskType.SSD, DiskType.EFFICIENCY],
             "description": "数据盘类型，不填则继承系统盘类型",
-            "examples": ["cloud_essd"],
+            "examples": [DiskType.ESSD],
         },
         {
             "name": "data_disk_size",

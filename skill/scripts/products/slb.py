@@ -6,8 +6,13 @@ ProductType: "slb"
 API docs: https://api.aliyun.com/document/BssOpenApi/2017-12-14/GetSubscriptionPrice
 """
 
+from typing import Any, Dict, List, Optional, Union
 
-def build_modules(params):
+from ai_friendly.constants import Region, Category, DiskType
+from ai_friendly.types import ParamDef, ModuleSpec
+
+
+def build_modules(params: Dict[str, Any]) -> List[Dict[str, str]]:
     """Build SLB pricing module list."""
     spec = params.get("spec", "slb.s3.large")
     internet_charge_type = params.get("internet_charge_type", 1)
@@ -41,7 +46,7 @@ def build_modules(params):
     return modules
 
 
-def format_summary(params):
+def format_summary(params: Dict[str, Any]) -> Dict[str, str]:
     """Build human-readable config summary."""
     charge_type = params.get("internet_charge_type", 1)
     charge_text = "按流量" if int(charge_type) == 1 else "按带宽"
@@ -54,7 +59,7 @@ def format_summary(params):
     return summary
 
 
-def validate(params):
+def validate(params: Dict[str, Any]) -> List[str]:
     """Validate SLB parameters."""
     errors = []
     charge_type = params.get("internet_charge_type", 1)
@@ -69,7 +74,7 @@ PRODUCT = {
     "name": "SLB",
     "display_name": "SLB 负载均衡",
     "product_type": "slb",
-    "category": "network",
+    "category": Category.NETWORK,
     "params": [
         {
             "name": "spec",

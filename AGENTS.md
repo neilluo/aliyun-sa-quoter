@@ -12,19 +12,20 @@
 ## 项目结构
 
 ```
-skill/scripts/quoter.py          # CLI 入口（5 个子命令: check/products/modules/info/price）
-skill/scripts/bss_client.py      # BSS API 客户端（签名、重试、错误处理）
-skill/scripts/errors.py          # 统一错误处理框架
-skill/scripts/registry.py        # 产品自动发现注册表
-skill/scripts/formatters.py      # Markdown 输出格式化
-skill/scripts/products/          # 每个产品一个文件（自包含 PRODUCT dict）
-skill/scripts/products/_base.py  # 产品定义接口约定与辅助函数
-skill/SKILL.md                   # AI 技能入口文档
-skill/product-reference.md       # 全产品参数速查
-skill/meta/regions.json          # 地域映射
-skill/meta/error_codes.json      # API 错误码 → 友好消息映射
-rules/                           # 开发规范（通过 .qoder/rules/ 符号链接自动加载）
-tests/                           # 单元测试 + 集成测试
+skill/scripts/quoter.py              # CLI 入口（5 个子命令: check/products/modules/info/price）
+skill/scripts/bss_client.py          # BSS API 客户端（签名、重试、错误处理）
+skill/scripts/errors.py              # 统一错误处理框架
+skill/scripts/formatters.py          # Markdown 输出格式化
+skill/scripts/registry.py            # 【已删除】合并到 framework/registry.py
+skill/scripts/product_params.py      # 【已删除】旧版模块构建器
+skill/scripts/framework/             # 核心框架（ builders/validators/base/registry ）
+skill/scripts/products/              # 每个产品一个文件（自包含 PRODUCT dict）
+skill/scripts/products/_base.py      # 【已删除】合并到 framework/base.py
+skill/scripts/ai_friendly/           # AI 友好开发框架（常量、类型、模板、验证）
+skill/SKILL.md                       # AI 技能入口文档
+skill/product-reference.md           # 全产品参数速查
+rules/                               # 开发规范（通过 .qoder/rules/ 符号链接自动加载）
+tests/                               # 单元测试 + 集成测试
 ```
 
 ## 规则文件

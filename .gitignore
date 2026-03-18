@@ -1,1 +1,17 @@
+# Git worktrees
 .worktrees/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# pytest cache
+.pytest_cache/
+
+# OpenClaw / OpenCode
+.opencode/node_modules/
+.opencode/bun.lock
+
