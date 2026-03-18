@@ -1,33 +1,61 @@
 ---
 name: aliyun-sa-quoter
 description: >
-  Query Alibaba Cloud product pricing via BSS OpenAPI. Supports ECS, RDS, SLB,
-  OSS, CDN, and EIP. Use when the user wants to query, estimate, or compare
-  Alibaba Cloud (aliyun) product prices, cost estimation, server quotes, or
-  cloud resource budgeting.
+  Query Alibaba Cloud product pricing via BSS OpenAPI. Supports 12 products including
+  ECS, RDS, MongoDB, Redis, SLB, EIP, OSS, NAS, CDN, WAF, RocketMQ, and Bailian LLM.
+  Use when the user wants to query, estimate, or compare Alibaba Cloud (aliyun) 
+  product prices, cost estimation, server quotes, or cloud resource budgeting.
 ---
 
 # Alibaba Cloud Quoter
 
-Query real-time Alibaba Cloud product prices via BSS OpenAPI. Supports 8 products: ECS, RDS, SLB, EIP, OSS, CDN, WAF, Bailian (百炼大模型).
+Query real-time Alibaba Cloud product prices via BSS OpenAPI. Supports **12 products** across compute, database, network, storage, security, middleware, and AI.
 
-## Products
+## Products Overview
 
-### BSS API Products (实时价格)
-- **ECS** - 云服务器
-- **RDS** - 云数据库
-- **SLB** - 负载均衡
-- **EIP** - 弹性公网IP
-- **OSS** - 对象存储
-- **CDN** - 内容分发网络
-- **WAF** - Web应用防火墙
+### Compute (计算)
+| Product | Code | Description | Billing |
+|---------|------|-------------|---------|
+| **ECS** | `ecs` | 云服务器 | Subscription/PayAsYouGo |
 
-### Local Calculation Products (静态定价表)
-- **Bailian** - 百炼大模型（通义千问系列）
+### Database (数据库)
+| Product | Code | Description | Billing |
+|---------|------|-------------|---------|
+| **RDS** | `rds` | 关系型数据库 (MySQL, PostgreSQL, SQL Server) | Subscription/PayAsYouGo |
+| **MongoDB** | `mongodb` | 云数据库 MongoDB 版 | Subscription/PayAsYouGo |
+| **Redis** | `redis` | 云数据库 Redis 版 | Subscription/PayAsYouGo |
+
+### Network (网络)
+| Product | Code | Description | Billing |
+|---------|------|-------------|---------|
+| **SLB** | `slb` | 负载均衡 | Subscription |
+| **EIP** | `eip` | 弹性公网IP | Subscription |
+
+### Storage (存储)
+| Product | Code | Description | Billing |
+|---------|------|-------------|---------|
+| **OSS** | `oss` | 对象存储 | PayAsYouGo |
+| **NAS** | `nas` | 文件存储 NAS | PayAsYouGo |
+
+### CDN & Security (CDN与安全)
+| Product | Code | Description | Billing |
+|---------|------|-------------|---------|
+| **CDN** | `cdn` | 内容分发网络 | PayAsYouGo |
+| **WAF** | `waf` | Web应用防火墙 | Subscription/PayAsYouGo |
+
+### Middleware (中间件)
+| Product | Code | Description | Billing |
+|---------|------|-------------|---------|
+| **RocketMQ** | `rocketmq` | 消息队列 RocketMQ 版 | Subscription/PayAsYouGo |
+
+### AI (人工智能)
+| Product | Code | Description | Billing |
+|---------|------|-------------|---------|
+| **Bailian** | `bailian` | 百炼大模型（通义千问系列） | Local Calculation |
+
+---
 
 ## Prerequisites
-
-This skill uses only Python standard library -- no pip install or venv needed. Just requires Python 3.6+.
 
 ### Environment Configuration
 
@@ -50,188 +78,273 @@ Verify credentials before first use:
 python3 scripts/quoter.py check
 ```
 
-If credentials are missing, instruct the user to set environment variables:
-
+If credentials are missing, set environment variables:
 ```bash
 export ALIBABA_CLOUD_ACCESS_KEY_ID=your_access_key_id
 export ALIBABA_CLOUD_ACCESS_KEY_SECRET=your_access_key_secret
 ```
 
-Access keys can be obtained from: Alibaba Cloud Console -> AccessKey Management
-(https://ram.console.aliyun.com/manage/ak)
+Access keys: https://ram.console.aliyun.com/manage/ak
 
-## Workflow
+---
 
-When a user asks about Alibaba Cloud pricing, follow these steps:
+## Core Features
 
-```
-Task Progress:
-- [ ] Step 1: Check credentials
-- [ ] Step 2: Map user request to product parameters
-- [ ] Step 3: Execute pricing query
-- [ ] Step 4: Present results to user
-```
+### 1. Batch Query (批量查询)
 
-**Step 1: Check credentials**
+Query multiple configurations in parallel:
 
-Run from this file's directory:
 ```bash
-python3 scripts/quoter.py check
-```
-If this fails, show the user the credential setup instructions above.
-
-**Step 2: Map user request to product parameters**
-
-Identify: product type, region, instance spec, billing method, duration.
-See "Parameter Mapping" section below for common mappings.
-
-**Step 3: Execute pricing query**
-
-Run the appropriate price command (see "Script Reference" below).
-
-**Step 4: Present results**
-
-The script outputs Markdown-formatted pricing. Present it directly to the user.
-
-## Script Reference
-
-All commands run from this file's directory using `python3`.
-
-### Check credentials
-```bash
-python3 scripts/quoter.py check
+python3 quoter.py price ecs \
+  --params '[
+    {"instance_type":"ecs.c6.4xlarge","data_disk_size":100},
+    {"instance_type":"ecs.r9i.2xlarge","data_disk_size":200}
+  ]' \
+  --region cn-beijing
 ```
 
-### List products
+**Output**: Markdown table with all results and total price.
+
+### 2. Exclude System Disk (排除系统盘)
+
+Get instance-only pricing (useful when comparing instance types):
+
 ```bash
-python3 scripts/quoter.py products
+python3 quoter.py price ecs \
+  --params '{"instance_type":"ecs.c6.4xlarge"}' \
+  --exclude-system-disk
 ```
 
-### Discover pricing modules
+---
+
+## Quick Reference
+
+### Common Commands
+
 ```bash
-python3 scripts/quoter.py modules ecs --type Subscription
-python3 scripts/quoter.py modules rds --type PayAsYouGo
+# Check credentials
+python3 quoter.py check
+
+# List all products
+python3 quoter.py products
+
+# Get product info
+python3 quoter.py info ecs
+
+# Discover pricing modules
+python3 quoter.py modules ecs --type Subscription
 ```
 
-### Query ECS price
+### ECS (云服务器)
+
 ```bash
-python3 scripts/quoter.py price ecs \
-  --params '{"instance_type":"ecs.g7.xlarge","image_os":"linux","system_disk_category":"cloud_essd","system_disk_size":40,"data_disk_size":100,"internet_bandwidth":5}' \
-  --region cn-hangzhou \
-  --billing subscription \
-  --duration 1 \
-  --quantity 2
+# Basic query
+python3 quoter.py price ecs \
+  --params '{"instance_type":"ecs.g7.xlarge","system_disk_size":40}'
+
+# With data disk and bandwidth
+python3 quoter.py price ecs \
+  --params '{
+    "instance_type":"ecs.g7.xlarge",
+    "system_disk_size":40,
+    "data_disk_size":100,
+    "internet_bandwidth":5
+  }'
+
+# Exclude system disk (instance-only price)
+python3 quoter.py price ecs \
+  --params '{"instance_type":"ecs.g7.xlarge"}' \
+  --exclude-system-disk
+
+# Batch query
+python3 quoter.py price ecs \
+  --params '[
+    {"instance_type":"ecs.c6.4xlarge"},
+    {"instance_type":"ecs.r9i.2xlarge"},
+    {"instance_type":"ecs.r9i.4xlarge"}
+  ]'
 ```
 
-### Query RDS price
+### RDS (云数据库)
+
 ```bash
-python3 scripts/quoter.py price rds \
-  --params '{"engine":"mysql","engine_version":"8.0","series":"HighAvailability","instance_class":"mysql.n2.medium.2c","storage_type":"local_ssd","storage_size":100}' \
-  --region cn-hangzhou \
-  --billing subscription \
-  --duration 1
+# MySQL
+python3 quoter.py price rds \
+  --params '{
+    "engine":"mysql",
+    "engine_version":"8.0",
+    "series":"HighAvailability",
+    "instance_class":"mysql.n2.medium.2c",
+    "storage_type":"local_ssd",
+    "storage_size":100
+  }'
+
+# PostgreSQL
+python3 quoter.py price rds \
+  --params '{
+    "engine":"postgresql",
+    "engine_version":"14.0",
+    "series":"HighAvailability",
+    "instance_class":"pg.n2.medium.2c",
+    "storage_size":100
+  }'
 ```
 
-### Query SLB price
+### MongoDB
+
 ```bash
-python3 scripts/quoter.py price slb \
-  --params '{"spec":"slb.s3.large","internet_charge_type":1}' \
-  --region cn-hangzhou \
-  --billing subscription \
-  --duration 1
+python3 quoter.py price mongodb \
+  --params '{
+    "region":"cn-hangzhou",
+    "instance_class":"mdb.shard.2x.large.d",
+    "storage_size":100
+  }'
 ```
 
-### Query EIP price
+### Redis
+
 ```bash
-python3 scripts/quoter.py price eip \
-  --params '{"bandwidth":5,"internet_charge_type":"PayByTraffic"}' \
-  --region cn-hangzhou \
-  --billing subscription \
-  --duration 1
+python3 quoter.py price redis \
+  --params '{
+    "region":"cn-hangzhou",
+    "instance_class":"redis.master.small.default",
+    "architecture":"standard"
+  }'
 ```
 
-### Query OSS price
+### SLB (负载均衡)
+
 ```bash
-python3 scripts/quoter.py price oss \
+python3 quoter.py price slb \
+  --params '{"spec":"slb.s3.large","internet_charge_type":1}'
+```
+
+### EIP (弹性公网IP)
+
+```bash
+python3 quoter.py price eip \
+  --params '{"bandwidth":5,"internet_charge_type":"PayByTraffic"}'
+```
+
+### OSS (对象存储)
+
+```bash
+python3 quoter.py price oss \
   --params '{"storage_class":"Standard","capacity":500}' \
-  --region cn-hangzhou \
-  --billing subscription \
-  --duration 1
-```
-
-### Query CDN price
-```bash
-python3 scripts/quoter.py price cdn \
-  --params '{"traffic_package":1000}' \
-  --region cn-hangzhou \
-  --billing subscription \
-  --duration 1
-```
-
-### Query WAF price
-```bash
-# 包年包月 - 基础企业版
-python3 scripts/quoter.py price waf \
-  --params '{"billing_mode":"subscription","package_code":"version_4","region":"cn-hangzhou"}' \
-  --billing subscription \
-  --duration 1
-
-# 包年包月 - 带扩展功能
-python3 scripts/quoter.py price waf \
-  --params '{"billing_mode":"subscription","package_code":"version_4","region":"cn-hangzhou","qps_package":10,"bot_web":1,"apisec":1}' \
-  --billing subscription \
-  --duration 1
-
-# 按量付费
-python3 scripts/quoter.py price waf \
-  --params '{"billing_mode":"payasyougo","secu":100,"region":"cn-hangzhou"}' \
   --billing payAsYouGo
 ```
 
-### Query Bailian (百炼大模型) price
+### NAS (文件存储)
+
 ```bash
-# 基础查询
-python3 scripts/quoter.py price bailian \
-  --params '{"model":"qwen3-max","input_tokens":100000,"output_tokens":50000}'
-
-# 指定地域
-python3 scripts/quoter.py price bailian \
-  --params '{"model":"qwen3-max","region":"global","input_tokens":100000,"output_tokens":50000}'
-
-# Batch 调用（50% 折扣）
-python3 scripts/quoter.py price bailian \
-  --params '{"model":"qwen3-max","input_tokens":100000,"output_tokens":50000,"batch":true}'
-
-# 思考模式（部分模型支持）
-python3 scripts/quoter.py price bailian \
-  --params '{"model":"qwen3.5-plus","input_tokens":100000,"output_tokens":50000,"thinking":true}'
+python3 quoter.py price nas \
+  --params '{
+    "region":"cn-hangzhou",
+    "file_system_type":"standard",
+    "storage_type":"Performance",
+    "capacity":1000
+  }' \
+  --billing payAsYouGo
 ```
+
+### CDN
+
+```bash
+python3 quoter.py price cdn \
+  --params '{"traffic_package":1000}' \
+  --billing payAsYouGo
+```
+
+### WAF (Web应用防火墙)
+
+```bash
+# Subscription
+python3 quoter.py price waf \
+  --params '{
+    "billing_mode":"subscription",
+    "package_code":"version_4",
+    "region":"cn-hangzhou"
+  }'
+
+# PayAsYouGo
+python3 quoter.py price waf \
+  --params '{
+    "billing_mode":"payasyougo",
+    "secu":100,
+    "region":"cn-hangzhou"
+  }' \
+  --billing payAsYouGo
+```
+
+### RocketMQ
+
+```bash
+python3 quoter.py price rocketmq \
+  --params '{
+    "region":"cn-hangzhou",
+    "instance_class":"rocketmq.n1.micro"
+  }'
+```
+
+### Bailian (百炼大模型)
+
+```bash
+# Basic
+python3 quoter.py price bailian \
+  --params '{
+    "model":"qwen3-max",
+    "input_tokens":100000,
+    "output_tokens":50000
+  }'
+
+# Batch mode (50% discount)
+python3 quoter.py price bailian \
+  --params '{
+    "model":"qwen3-max",
+    "input_tokens":100000,
+    "output_tokens":50000,
+    "batch":true
+  }'
+
+# Thinking mode
+python3 quoter.py price bailian \
+  --params '{
+    "model":"qwen3.5-plus",
+    "input_tokens":100000,
+    "output_tokens":50000,
+    "thinking":true
+  }'
+```
+
+---
 
 ## Parameter Mapping
 
-Map natural language to `--params` JSON keys:
+### Natural Language to Parameters
 
-| User says | Product | Key params JSON |
-|-----------|---------|----------------|
-| "4核8G服务器" | ecs | `{"instance_type":"ecs.c7.xlarge"}` (4C8G) |
-| "4核16G服务器" | ecs | `{"instance_type":"ecs.g7.xlarge"}` (4C16G) |
-| "2核4G" | ecs | `{"instance_type":"ecs.c7.large"}` (2C4G) |
-| "8核32G" | ecs | `{"instance_type":"ecs.g7.2xlarge"}` (8C32G) |
+| User Request | Product | Parameters |
+|-------------|---------|------------|
+| "4核8G服务器" | ecs | `{"instance_type":"ecs.c7.xlarge"}` |
+| "4核16G服务器" | ecs | `{"instance_type":"ecs.g7.xlarge"}` |
+| "8核64G内存型" | ecs | `{"instance_type":"ecs.r7.2xlarge"}` |
 | "MySQL数据库" | rds | `{"engine":"mysql"}` |
 | "PostgreSQL" | rds | `{"engine":"postgresql"}` |
-| "负载均衡" | slb | product=slb |
-| "弹性IP/公网IP" | eip | product=eip |
-| "对象存储" | oss | product=oss |
-| "CDN加速" | cdn | product=cdn |
-| "WAF防火墙" | waf | product=waf |
-| "百炼大模型" | bailian | product=bailian |
-| "通义千问" | bailian | `{"model":"qwen3-max"}` |
+| "MongoDB" | mongodb | `{}` |
+| "Redis缓存" | redis | `{}` |
+| "负载均衡" | slb | `{}` |
+| "公网IP" | eip | `{}` |
+| "对象存储" | oss | `{}` |
+| "文件存储" | nas | `{}` |
+| "CDN" | cdn | `{}` |
+| "WAF防火墙" | waf | `{}` |
+| "RocketMQ" | rocketmq | `{}` |
+| "百炼/通义千问" | bailian | `{"model":"qwen3-max"}` |
 | "杭州/华东1" | any | `--region cn-hangzhou` |
 | "北京/华北2" | any | `--region cn-beijing` |
 | "上海/华东2" | any | `--region cn-shanghai` |
 | "深圳/华南1" | any | `--region cn-shenzhen` |
-| "包月/包年包月" | any | `--billing subscription` |
-| "按量/按量付费" | any | `--billing payAsYouGo` |
+| "包年包月" | any | `--billing subscription` |
+| "按量付费" | any | `--billing payAsYouGo` |
 | "1年" | any | `--duration 12` |
 | "3年" | any | `--duration 36` |
 
@@ -243,74 +356,76 @@ Map natural language to `--params` JSON keys:
 | 4 | 8G/16G/32G | ecs.c7.xlarge | ecs.g7.xlarge | ecs.r7.xlarge |
 | 8 | 16G/32G/64G | ecs.c7.2xlarge | ecs.g7.2xlarge | ecs.r7.2xlarge |
 | 16 | 32G/64G/128G | ecs.c7.4xlarge | ecs.g7.4xlarge | ecs.r7.4xlarge |
+| 32 | 64G/128G/256G | ecs.c7.8xlarge | ecs.g7.8xlarge | ecs.r7.8xlarge |
 
 - **c7** (计算型): CPU:Memory = 1:2
 - **g7** (通用型): CPU:Memory = 1:4
 - **r7** (内存型): CPU:Memory = 1:8
 
-## Multi-Instance Price Comparison (ECS)
+---
 
-When the user specifies vCPU and memory requirements (e.g., "16核64G"), **ALWAYS query multiple instance types** and present a comparison table.
+## Multi-Instance Price Comparison
 
-**Example workflow for "北京16核64G":**
+When user specifies requirements like "16核64G", query multiple instance types:
 
-1. Identify matching instance types from the reference table:
-   - 16核64G matches: ecs.g7.4xlarge, ecs.g8i.4xlarge, ecs.g8y.4xlarge, ecs.g8a.4xlarge, etc.
+```bash
+python3 quoter.py price ecs \
+  --params '[
+    {"instance_type":"ecs.g7.4xlarge"},
+    {"instance_type":"ecs.g8y.4xlarge"},
+    {"instance_type":"ecs.g8a.4xlarge"}
+  ]' \
+  --region cn-beijing
+```
 
-2. Query prices for ALL matching instance types:
-   ```bash
-   # Query each instance type
-   python3 quoter.py price ecs --params '{"instance_type":"ecs.g7.4xlarge"}' ...
-   python3 quoter.py price ecs --params '{"instance_type":"ecs.g8y.4xlarge"}' ...
-   python3 quoter.py price ecs --params '{"instance_type":"ecs.g8a.4xlarge"}' ...
-   # ... etc
-   ```
+**Output comparison table**:
+| 实例类型 | 系列 | 价格/月 | 推荐度 |
+|----------|------|---------|--------|
+| ecs.g8y.4xlarge | ARM | ¥1,576 | ⭐ 最优 |
+| ecs.g8a.4xlarge | AMD | ¥1,999 | 较好 |
+| ecs.g7.4xlarge | Intel | ¥2,049 | 标准 |
 
-3. Present results in a comparison table:
-   | 实例类型 | 系列 | 价格/月 | 推荐度 |
-   |----------|------|---------|--------|
-   | ecs.g8y.4xlarge | ARM | ¥1,576 | ⭐ 最优 |
-   | ecs.g8a.4xlarge | AMD | ¥1,999 | 较好 |
-   | ecs.g7.4xlarge | Intel | ¥2,049 | 标准 |
-
-**Key rule**: Do NOT return just one instance type when the user asks for a configuration. Always provide options.
+---
 
 ## Error Handling
 
-- **Credentials missing**: Script prints setup instructions with the AccessKey management URL. Guide the user to configure environment variables.
-- **API errors**: Script returns friendly Chinese error messages. If a product query fails, suggest using `quoter.py modules <product>` to discover valid parameters.
-- **Unknown instance type**: Suggest the user check Alibaba Cloud documentation or use the ECS Instance Type Reference table above.
+| Error | Solution |
+|-------|----------|
+| Credentials missing | Set `ALIBABA_CLOUD_ACCESS_KEY_ID` and `ALIBABA_CLOUD_ACCESS_KEY_SECRET` |
+| API errors | Check `quoter.py modules <product>` for valid parameters |
+| Invalid instance type | Use ECS Instance Type Reference table |
+
+---
 
 ## Known Limitations
 
-### Unsupported Products
+### Billing Mode Limitations
 
-The following products are NOT supported by BSS OpenAPI:
-
-| Product | Reason |
-|---------|--------|
-| **alikafka** | Not available in BSS API |
-| **elasticsearch** | Not available in BSS API |
-| **polardb** | Only PolarDB-X 1.0 (drds) is supported |
-
-### Partially Supported Products
-
-| Product | Limitation |
-|---------|-----------|
-| **CDN** | Only PayAsYouGo billing; module configuration is complex |
-| **OSS** | Only PayAsYouGo billing |
-| **EIP** | Only Subscription billing |
-| **SLB** | Only Subscription billing |
-| **NAS** | Only PayAsYouGo billing |
+| Product | Subscription | PayAsYouGo |
+|---------|-----------|------------|
+| ECS | ✅ | ✅ |
+| RDS | ✅ | ✅ |
+| MongoDB | ✅ | ✅ |
+| Redis | ✅ | ✅ |
+| SLB | ✅ | ❌ |
+| EIP | ✅ | ❌ |
+| OSS | ❌ | ✅ |
+| NAS | ❌ | ✅ |
+| CDN | ❌ | ✅ |
+| WAF | ✅ | ✅ |
+| RocketMQ | ✅ | ✅ |
+| Bailian | N/A | N/A (Local) |
 
 ### Product Code Mappings
 
-Some products use different ProductCode in BSS API:
+Some products use different codes in BSS API:
 
-| User-facing Code | BSS API Code |
-|------------------|--------------|
+| Display Name | BSS API Code |
+|-------------|--------------|
 | polardb | drds (PolarDB-X 1.0) |
+
+---
 
 ## Detailed Reference
 
-For complete ModuleCode, Config format, and parameter values for each product, see [product-reference.md](product-reference.md).
+For complete ModuleCode, Config format, and parameter values, see [product-reference.md](product-reference.md).
