@@ -16,6 +16,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Ensure scripts directory is importable
 sys.path.insert(0, str(Path(__file__).parent))
@@ -158,8 +159,142 @@ def _format_bailian_price(result):
     return "\n".join(lines)
 
 
+def _parse_params(params_str):
+    """Parse params JSON - supports single object or array."""
+    try:
+        data = json.loads(params_str)
+        if isinstance(data, list):
+            return data
+        return [data]
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON: {e}")
+
+
+def _query_single_sync(product_code, params, product, billing, region, duration, quantity):
+    """Execute a single price query (synchronous version for batch)."""
+    # 7. Build modules
+    modules = product["build_modules"](params)
+
+    # 8. Check if this is a local calculation product (e.g., bailian)
+    if _is_local_calculation_product(modules):
+        from products.bailian import calculate_price
+        result = calculate_price(params)
+        return {
+            "type": "local",
+            "config_summary": product["format_summary"](params),
+            "result": result,
+            "total": result.get("total_price", 0),
+        }
+
+    # 9. Resolve ProductType
+    product_type = resolve_product_type(product, params)
+
+    # 10. Get BSS API ProductCode
+    bss_product_code = product.get("bss_product_code", product_code)
+
+    # 11. Create client and call BSS API
+    client = bss_client.create_client()
+
+    if billing == "subscription":
+        price_data = bss_client.get_subscription_price(
+            client, bss_product_code, modules,
+            region=region,
+            duration=duration,
+            quantity=quantity,
+            product_type=product_type,
+        )
+    else:
+        price_data = bss_client.get_pay_as_you_go_price(
+            client, bss_product_code, modules,
+            region=region,
+            product_type=product_type,
+        )
+
+    config_summary = product["format_summary"](params)
+
+    # Calculate total from module_details
+    original = price_data.get("original_amount")
+    trade = price_data.get("trade_amount")
+
+    if original is None and price_data.get("module_details"):
+        original = sum(
+            (md.get("original_cost") or 0) for md in price_data["module_details"]
+        )
+    if trade is None and price_data.get("module_details"):
+        trade = sum(
+            (md.get("cost_after_discount") or md.get("original_cost") or 0)
+            for md in price_data["module_details"]
+        )
+
+    original = original or 0
+    trade = trade or 0
+
+    # Extract module prices
+    instance_price = 0
+    disk_price = 0
+    for md in price_data.get("module_details", []):
+        cost = md.get("cost_after_discount") or md.get("original_cost") or 0
+        if md["module_code"] == "InstanceType":
+            instance_price = float(cost)
+        elif md["module_code"] in ("SystemDisk", "DataDisk"):
+            disk_price += float(cost)
+
+    return {
+        "type": "bss",
+        "config_summary": config_summary,
+        "price_data": price_data,
+        "instance_price": instance_price,
+        "disk_price": disk_price,
+        "total": trade,
+        "original": original,
+    }
+
+
+def _query_batch(product_code, params_list, args):
+    """Execute batch queries with concurrency."""
+    product = registry.get_product(product_code)
+
+    results = []
+    errors = []
+
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        future_to_idx = {
+            executor.submit(
+                _query_single_sync,
+                product_code,
+                params,
+                product,
+                args.billing,
+                args.region,
+                args.duration,
+                args.quantity
+            ): idx
+            for idx, params in enumerate(params_list)
+        }
+
+        for future in as_completed(future_to_idx):
+            idx = future_to_idx[future]
+            try:
+                result = future.result()
+                results.append((idx, result))
+            except Exception as e:
+                errors.append((idx, str(e)))
+
+    results.sort(key=lambda x: x[0])
+
+    return formatters.format_batch_results(
+        product["display_name"],
+        results,
+        errors,
+        args.billing,
+        args.duration,
+        args.quantity,
+        args.region,
+    )
+
+
 def cmd_price(args):
-    """Query product price using registry-based architecture."""
+    """Query product price - supports batch query."""
     product_code = args.product
 
     # 1. Look up product definition
@@ -169,96 +304,127 @@ def cmd_price(args):
         print(f"错误: 未知产品 '{product_code}'。已注册产品: {', '.join(codes)}")
         return 1
 
-    # 2. Parse --params JSON
+    # 2. Parse --params JSON (supports single object or array)
     try:
-        params = json.loads(args.params)
-    except json.JSONDecodeError as e:
+        params_list = _parse_params(args.params)
+    except ValueError as e:
         print(f"错误: --params JSON 解析失败: {e}")
         print(f"示例: --params '{{\"instance_type\":\"ecs.g7.xlarge\"}}'")
         return 1
 
-    # 3. Fill defaults
-    fill_defaults(product, params)
+    # 3. Add exclude_system_disk to each params if specified
+    if getattr(args, "exclude_system_disk", False):
+        for params in params_list:
+            params["exclude_system_disk"] = True
 
-    # 4. Type coercion
-    coerce_types(product, params)
+    # 4. Single query - keep existing logic
+    if len(params_list) == 1:
+        params = params_list[0]
 
-    # 5+6. Validate (required check + product rules)
-    errors = validate_params(product, params)
-    if errors:
-        print(format_error(ValidationError(errors)))
-        return 1
+        # Fill defaults
+        fill_defaults(product, params)
 
-    # 7. Build modules
-    try:
-        modules = product["build_modules"](params)
-    except Exception as e:
-        print(f"错误: 参数构建失败: {e}")
-        return 1
+        # Type coercion
+        coerce_types(product, params)
 
-    # 8. Check if this is a local calculation product (e.g., bailian)
-    if _is_local_calculation_product(modules):
-        # Import bailian module for local calculation
-        try:
-            from products.bailian import calculate_price
-            result = calculate_price(params)
-            print(_format_bailian_price(result))
-            return 0
-        except Exception as e:
-            print(f"错误: 价格计算失败: {e}")
+        # Validate
+        errors = validate_params(product, params)
+        if errors:
+            print(format_error(ValidationError(errors)))
             return 1
 
-    # 9. Resolve ProductType
-    product_type = resolve_product_type(product, params)
+        # Build modules
+        try:
+            modules = product["build_modules"](params)
+        except Exception as e:
+            print(f"错误: 参数构建失败: {e}")
+            return 1
 
-    # 10. Get BSS API ProductCode (some products use different code in BSS API)
-    bss_product_code = product.get("bss_product_code", product_code)
+        # Check local calculation
+        if _is_local_calculation_product(modules):
+            try:
+                from products.bailian import calculate_price
+                result = calculate_price(params)
+                print(_format_bailian_price(result))
+                return 0
+            except Exception as e:
+                print(f"错误: 价格计算失败: {e}")
+                return 1
 
-    # 11. Create client and call BSS API
-    try:
-        client = bss_client.create_client()
-    except bss_client.CredentialError as e:
-        print(str(e))
-        return 1
+        # Resolve ProductType
+        product_type = resolve_product_type(product, params)
 
-    try:
-        billing = args.billing
+        # Get BSS API ProductCode
+        bss_product_code = product.get("bss_product_code", product_code)
 
-        if billing == "subscription":
-            price_data = bss_client.get_subscription_price(
-                client, bss_product_code, modules,
-                region=args.region,
-                duration=args.duration,
+        # Create client and call BSS API
+        try:
+            client = bss_client.create_client()
+        except bss_client.CredentialError as e:
+            print(str(e))
+            return 1
+
+        try:
+            billing = args.billing
+
+            if billing == "subscription":
+                price_data = bss_client.get_subscription_price(
+                    client, bss_product_code, modules,
+                    region=args.region,
+                    duration=args.duration,
+                    quantity=args.quantity,
+                    product_type=product_type,
+                )
+            else:
+                price_data = bss_client.get_pay_as_you_go_price(
+                    client, bss_product_code, modules,
+                    region=args.region,
+                    product_type=product_type,
+                )
+
+            # Format output
+            config_summary = product["format_summary"](params)
+            result = formatters.format_price_result(
+                product_name=product["display_name"],
+                config_summary=config_summary,
+                price_data=price_data,
+                billing_method=billing,
+                duration=args.duration if billing == "subscription" else None,
                 quantity=args.quantity,
-                product_type=product_type,
-            )
-        else:
-            price_data = bss_client.get_pay_as_you_go_price(
-                client, bss_product_code, modules,
                 region=args.region,
-                product_type=product_type,
             )
+            print(result)
+            return 0
 
-        # 11. Format output
-        config_summary = product["format_summary"](params)
-        result = formatters.format_price_result(
-            product_name=product["display_name"],
-            config_summary=config_summary,
-            price_data=price_data,
-            billing_method=billing,
-            duration=args.duration if billing == "subscription" else None,
-            quantity=args.quantity,
-            region=args.region,
-        )
-        print(result)
-        return 0
+        except bss_client.BssApiError as e:
+            print(f"错误: {e}")
+            return 1
+        except Exception as e:
+            print(f"错误: 询价失败: {e}")
+            return 1
 
-    except bss_client.BssApiError as e:
-        print(f"错误: {e}")
-        return 1
-    except Exception as e:
-        print(f"错误: 询价失败: {e}")
-        return 1
+    # 5. Batch query - concurrent execution
+    else:
+        # Validate all params first
+        for idx, params in enumerate(params_list):
+            fill_defaults(product, params)
+            coerce_types(product, params)
+            errors = validate_params(product, params)
+            if errors:
+                print(f"错误: 配置 {idx + 1} 参数验证失败:")
+                print(format_error(ValidationError(errors)))
+                return 1
+
+        try:
+            result = _query_batch(product_code, params_list, args)
+            print(result)
+            return 0
+        except bss_client.CredentialError as e:
+            print(str(e))
+            return 1
+        except Exception as e:
+            print(f"错误: 批量询价失败: {e}")
+            return 1
 
 
 def build_parser():
@@ -292,13 +458,15 @@ def build_parser():
     p_price = subparsers.add_parser("price", help="查询产品价格")
     p_price.add_argument("product", help="产品代码")
     p_price.add_argument("--params", required=True,
-                         help="产品参数 JSON，如 '{\"instance_type\":\"ecs.g7.xlarge\"}'")
+                         help="产品参数 JSON，支持单对象或数组，如 '{\"instance_type\":\"ecs.g7.xlarge\"}' 或 '[{...}, {...}]'")
     p_price.add_argument("--region", default="cn-hangzhou", help="地域 ID (默认: cn-hangzhou)")
     p_price.add_argument("--billing", default="subscription",
                          choices=["subscription", "payAsYouGo"],
                          help="计费方式 (默认: subscription)")
     p_price.add_argument("--duration", type=int, default=1, help="包月时长/月 (默认: 1)")
     p_price.add_argument("--quantity", type=int, default=1, help="数量 (默认: 1)")
+    p_price.add_argument("--exclude-system-disk", action="store_true",
+                         help="排除系统盘价格（仅 ECS），SystemDisk 价格将设为 0")
 
     return parser
 

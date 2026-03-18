@@ -87,6 +87,26 @@ class TestECSModules(unittest.TestCase):
         self.assertIn("实例规格", summary)
         self.assertEqual(summary["实例规格"], "ecs.g7.xlarge")
 
+    def test_build_modules_exclude_system_disk(self):
+        """Should set SystemDisk size to 0 when exclude_system_disk=True."""
+        params = {
+            "instance_type": "ecs.g7.xlarge",
+            "exclude_system_disk": True,
+        }
+        modules = build_modules(params)
+        sd_module = next(m for m in modules if m["module_code"] == "SystemDisk")
+        self.assertIn("SystemDisk.Size:0", sd_module["config"])
+
+    def test_build_modules_include_system_disk_by_default(self):
+        """Should include normal SystemDisk size by default."""
+        params = {
+            "instance_type": "ecs.g7.xlarge",
+            "system_disk_size": 40,
+        }
+        modules = build_modules(params)
+        sd_module = next(m for m in modules if m["module_code"] == "SystemDisk")
+        self.assertIn("SystemDisk.Size:40", sd_module["config"])
+
 
 class TestECSAPI(unittest.TestCase):
     """Integration tests for ECS (requires credentials)."""

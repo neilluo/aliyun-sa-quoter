@@ -29,6 +29,22 @@ Query real-time Alibaba Cloud product prices via BSS OpenAPI. Supports 8 product
 
 This skill uses only Python standard library -- no pip install or venv needed. Just requires Python 3.6+.
 
+### Environment Configuration
+
+The skill requires Alibaba Cloud AccessKey credentials. Check these locations for existing configuration:
+
+- `~/.profile`
+- `~/.zshrc`
+- `~/.bashrc`
+
+Look for:
+```bash
+export ALIBABA_CLOUD_ACCESS_KEY_ID=your_access_key_id
+export ALIBABA_CLOUD_ACCESS_KEY_SECRET=your_access_key_secret
+```
+
+### Credential Verification
+
 Verify credentials before first use:
 ```bash
 python3 scripts/quoter.py check

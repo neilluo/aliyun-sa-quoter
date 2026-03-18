@@ -29,6 +29,9 @@ def build_modules(params: Dict[str, Any]) -> List[Dict[str, str]]:
     data_disk_size = params.get("data_disk_size", 0)
     internet_bandwidth = params.get("internet_bandwidth", 0)
 
+    # Check if we should exclude system disk
+    exclude_system_disk = params.get("exclude_system_disk", False)
+
     family = _extract_instance_family(instance_type)
 
     modules = [
@@ -42,15 +45,24 @@ def build_modules(params: Dict[str, Any]) -> List[Dict[str, str]]:
             ),
             "price_type": "Hour",
         },
-        {
+    ]
+
+    # SystemDisk - use size 0 if excluded
+    if exclude_system_disk:
+        modules.append({
+            "module_code": "SystemDisk",
+            "config": f"SystemDisk.Category:{system_disk_category},SystemDisk.Size:0",
+            "price_type": "Hour",
+        })
+    else:
+        modules.append({
             "module_code": "SystemDisk",
             "config": (
                 f"SystemDisk.Category:{system_disk_category},"
                 f"SystemDisk.Size:{system_disk_size}"
             ),
             "price_type": "Hour",
-        },
-    ]
+        })
 
     if data_disk_size and int(data_disk_size) > 0:
         category = data_disk_category or system_disk_category

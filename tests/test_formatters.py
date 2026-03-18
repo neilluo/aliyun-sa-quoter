@@ -186,5 +186,94 @@ class TestFormatCredentialCheck(unittest.TestCase):
         self.assertIn("连接超时", result)
 
 
+class TestFormatBatchResults(unittest.TestCase):
+    """Tests for format_batch_results()."""
+
+    def test_basic_output(self):
+        """Should format batch results as table."""
+        results = [
+            (0, {
+                "config_summary": {"实例规格": "ecs.c6.4xlarge"},
+                "instance_price": 1496.0,
+                "disk_price": 100.0,
+                "total": 1596.0,
+            }),
+            (1, {
+                "config_summary": {"实例规格": "ecs.r9i.2xlarge"},
+                "instance_price": 1269.91,
+                "disk_price": 200.0,
+                "total": 1469.91,
+            }),
+        ]
+        errors = []
+        result = formatters.format_batch_results(
+            "ECS 云服务器",
+            results,
+            errors,
+            "subscription",
+            duration=1,
+            quantity=1,
+            region="cn-hangzhou",
+        )
+        self.assertIn("批量报价结果", result)
+        self.assertIn("ecs.c6.4xlarge", result)
+        self.assertIn("ecs.r9i.2xlarge", result)
+        self.assertIn("1496.00", result)
+        self.assertIn("总计", result)
+
+    def test_with_errors(self):
+        """Should include error section when there are errors."""
+        results = [
+            (0, {
+                "config_summary": {"实例规格": "ecs.c6.4xlarge"},
+                "instance_price": 1496.0,
+                "disk_price": 0.0,
+                "total": 1496.0,
+            }),
+        ]
+        errors = [(1, "Invalid instance type")]
+        result = formatters.format_batch_results(
+            "ECS",
+            results,
+            errors,
+            "subscription",
+        )
+        self.assertIn("错误", result)
+        self.assertIn("配置 2", result)
+        self.assertIn("Invalid instance type", result)
+
+    def test_yearly_billing_text(self):
+        """Should show yearly billing text."""
+        result = formatters.format_batch_results(
+            "ECS",
+            [],
+            [],
+            "subscription",
+            duration=12,
+        )
+        self.assertIn("1年", result)
+
+    def test_with_quantity(self):
+        """Should multiply total by quantity."""
+        results = [
+            (0, {
+                "config_summary": {"实例规格": "ecs.g7.xlarge"},
+                "instance_price": 500.0,
+                "disk_price": 0.0,
+                "total": 500.0,
+            }),
+        ]
+        result = formatters.format_batch_results(
+            "ECS",
+            results,
+            [],
+            "subscription",
+            duration=1,
+            quantity=3,
+        )
+        self.assertIn("数量", result)
+        self.assertIn("1500.00", result)  # 500 * 3
+
+
 if __name__ == "__main__":
     unittest.main()

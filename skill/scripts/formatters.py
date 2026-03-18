@@ -246,3 +246,68 @@ def format_credential_check(success, message=""):
         return "凭证检查通过。AK/SK 已配置且 API 可连通。"
     else:
         return f"凭证检查失败: {message}"
+
+
+def format_batch_results(product_name, results, errors, billing_method,
+                         duration=None, quantity=1, region=None):
+    """Format batch query results as Markdown table.
+
+    Args:
+        product_name: e.g. "ECS 云服务器"
+        results: list of (idx, result_dict) tuples
+        errors: list of (idx, error_msg) tuples
+        billing_method: "subscription" or "payAsYouGo"
+        duration: months (for subscription)
+        quantity: number of instances
+        region: region id
+
+    Returns Markdown string.
+    """
+    lines = [f"## {product_name}批量报价结果", ""]
+
+    # Billing info
+    billing_text = "包年包月" if billing_method == "subscription" else "按量付费"
+    if billing_method == "subscription" and duration:
+        if duration >= 12 and duration % 12 == 0:
+            billing_text += f" / {duration // 12}年"
+        else:
+            billing_text += f" / {duration}个月"
+    lines.append(f"**计费方式**: {billing_text}")
+    if region:
+        lines.append(f"**地域**: {get_region_name(region)} ({region})")
+    if quantity > 1:
+        lines.append(f"**数量**: {quantity}")
+    lines.append("")
+
+    # Summary table
+    lines.append("| 序号 | 配置 | 实例价格 | 数据盘 | 总计 |")
+    lines.append("|------|------|---------|--------|------|")
+
+    total_monthly = 0
+    for idx, result in results:
+        # Extract prices from result
+        instance_price = result.get("instance_price", 0)
+        disk_price = result.get("disk_price", 0)
+        subtotal = result.get("total", 0)
+        config_summary = result.get("config_summary", {})
+
+        # Get instance type from config summary
+        instance_type = config_summary.get("实例规格", "-")
+
+        lines.append(f"| {idx + 1} | {instance_type} | ¥{float(instance_price):.2f} | ¥{float(disk_price):.2f} | ¥{float(subtotal):.2f} |")
+        total_monthly += float(subtotal)
+
+    lines.append("")
+
+    # Apply quantity multiplier
+    total_all = total_monthly * quantity
+    lines.append(f"**总计**: ¥{total_all:.2f}/月")
+
+    # Error summary
+    if errors:
+        lines.append("")
+        lines.append("## 错误")
+        for idx, error in errors:
+            lines.append(f"- 配置 {idx + 1}: {error}")
+
+    return "\n".join(lines)
