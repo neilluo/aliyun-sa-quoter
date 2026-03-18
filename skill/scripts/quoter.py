@@ -77,8 +77,10 @@ def cmd_modules(args):
         # Get product_type from registry if available
         product = registry.get_product(args.product)
         product_type = product.get("product_type") if product else None
+        # Use bss_product_code if available (e.g., polardb -> drds)
+        bss_product_code = product.get("bss_product_code", args.product) if product else args.product
         modules = bss_client.describe_pricing_modules(
-            client, args.product, args.type, product_type
+            client, bss_product_code, args.type, product_type
         )
         print(formatters.format_pricing_modules(args.product, modules))
         return 0
@@ -209,7 +211,10 @@ def cmd_price(args):
     # 9. Resolve ProductType
     product_type = resolve_product_type(product, params)
 
-    # 10. Create client and call BSS API
+    # 10. Get BSS API ProductCode (some products use different code in BSS API)
+    bss_product_code = product.get("bss_product_code", product_code)
+
+    # 11. Create client and call BSS API
     try:
         client = bss_client.create_client()
     except bss_client.CredentialError as e:
@@ -221,7 +226,7 @@ def cmd_price(args):
 
         if billing == "subscription":
             price_data = bss_client.get_subscription_price(
-                client, product_code, modules,
+                client, bss_product_code, modules,
                 region=args.region,
                 duration=args.duration,
                 quantity=args.quantity,
@@ -229,7 +234,7 @@ def cmd_price(args):
             )
         else:
             price_data = bss_client.get_pay_as_you_go_price(
-                client, product_code, modules,
+                client, bss_product_code, modules,
                 region=args.region,
                 product_type=product_type,
             )
