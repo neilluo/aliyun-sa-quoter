@@ -111,17 +111,8 @@ PARAMS: List[ParamDef] = [
 
 MODULES: List[ModuleSpec] = [
     {
-        "module_code": "FileSystem",
-        "config_template": "Region:{region},FileSystemType:{file_system_type},StorageType:{storage_type},ProtocolType:{protocol_type}",
-    },
-    {
-        "module_code": "Capacity",
-        "config_template": "Region:{region},Capacity:{capacity}",
-    },
-    {
-        "module_code": "DataTransfer",
-        "config_template": "Region:{region},DataTransfer:{data_transfer}",
-        "condition": lambda p: p.get("data_transfer", 0) > 0,
+        "module_code": "VolumeSize",
+        "config_template": "Region:{region},VolumeSize:{capacity}",
     },
 ]
 
