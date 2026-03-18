@@ -6,10 +6,9 @@ ProductType: None (ECS does not require ProductType)
 API docs: https://api.aliyun.com/document/BssOpenApi/2017-12-14/GetSubscriptionPrice
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List
 
-from ai_friendly.constants import Region, Category, DiskType
-from ai_friendly.types import ParamDef, ModuleSpec
+from ai_friendly.constants import Category, DiskType
 
 
 def _extract_instance_family(instance_type: str) -> str:

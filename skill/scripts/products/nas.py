@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 from framework.builders import ModuleBuilder
 from framework.validators import ValidationRule, Validator
-from ai_friendly.constants import Region, Category, BillingType, ProductType, PriceType
+from ai_friendly.constants import Region, Category, BillingType, PriceType
 from ai_friendly.types import ParamDef, ModuleSpec
 
 

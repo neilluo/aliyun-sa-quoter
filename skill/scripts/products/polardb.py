@@ -5,11 +5,11 @@ ProductType: "online" (必需)
 API docs: https://api.aliyun.com/document/BssOpenApi/2017-12-14/GetSubscriptionPrice
 """
 
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Dict, List
 
 from framework.builders import ModuleBuilder
 from framework.validators import ValidationRule, Validator
-from ai_friendly.constants import Region, Category, BillingType
+from ai_friendly.constants import Region, Category
 from ai_friendly.types import ParamDef, ModuleSpec
 
 
