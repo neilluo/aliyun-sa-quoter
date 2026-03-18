@@ -8,15 +8,28 @@ API docs: https://api.aliyun.com/document/BssOpenApi/2017-12-14/GetSubscriptionP
 
 
 def _get_product_type(params):
-    """Redis uses empty ProductType."""
+    """Redis uses empty ProductType.
+
+    Args:
+        params: 用户参数字典
+
+    Returns:
+        str: 空字符串（Redis 不需要 ProductType）
+    """
     return ""
 
 
 def build_modules(params):
     """Build Redis pricing module list.
-    
+
     Based on BSS API response, Redis only has InstanceClass module.
     The Config format should include Region and InstanceClass.
+
+    Args:
+        params: 用户参数字典，包含 instance_class, region 等参数
+
+    Returns:
+        list: 模块列表，每个模块包含 module_code, config, price_type
     """
     instance_class = params.get("instance_class", "redis.master.small.default")
     region = params.get("region", "cn-hangzhou")
@@ -33,7 +46,14 @@ def build_modules(params):
 
 
 def format_summary(params):
-    """Build human-readable config summary."""
+    """Build human-readable config summary.
+
+    Args:
+        params: 用户参数字典
+
+    Returns:
+        dict: 配置摘要字典，包含版本、架构、规格等信息
+    """
     edition = params.get("edition", "community")
     architecture = params.get("architecture", "standard")
 
@@ -61,7 +81,14 @@ def format_summary(params):
 
 
 def validate(params):
-    """Validate Redis parameters."""
+    """Validate Redis parameters.
+
+    Args:
+        params: 用户参数字典
+
+    Returns:
+        list: 错误信息列表（空列表表示验证通过）
+    """
     errors = []
 
     edition = params.get("edition", "community")
