@@ -27,13 +27,9 @@ CATEGORY: str = Category.CDN_SECURITY
 def _get_product_type(params: Dict[str, Any]) -> Optional[str]:
     """Determine ProductType based on billing mode.
 
-    - Subscription (包年包月) uses "waf_v3prepaid_public_cn"
-    - PayAsYouGo (按量付费) uses "waf_v2_public_cn"
+    BSS API uses "waf" for both subscription and pay-as-you-go.
     """
-    billing_mode = params.get("billing_mode", BillingType.SUBSCRIPTION)
-    if billing_mode == BillingType.PAY_AS_YOU_GO:
-        return ProductType.WAF_V2
-    return ProductType.WAF_V3_PREPAID
+    return "waf"
 
 
 PRODUCT_TYPE: Optional[Union[str, Callable]] = _get_product_type

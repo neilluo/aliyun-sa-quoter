@@ -38,7 +38,7 @@ PRODUCT = {
     "code": "cdn",
     "name": "CDN",
     "display_name": "CDN 内容分发",
-    "product_type": "cdn",
+    "product_type": "CDN",
     "category": Category.CDN_SECURITY,
     "params": [
         {
