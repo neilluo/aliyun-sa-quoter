@@ -17,15 +17,12 @@ def build_modules(params: Dict[str, Any]) -> List[Dict[str, str]]:
     bandwidth = params.get("bandwidth", 5)
     internet_charge_type = params.get("internet_charge_type", "PayByTraffic")
 
+    # EIP only has Bandwidth module for subscription
+    # Config format: Bandwidth:<value>,ISP:<isp>
     modules = [
         {
-            "module_code": "Bindwidth",
-            "config": f"Bindwidth:{bandwidth}",
-            "price_type": "Hour",
-        },
-        {
-            "module_code": "InternetChargeType",
-            "config": f"InternetChargeType:{internet_charge_type}",
+            "module_code": "Bandwidth",
+            "config": f"Bandwidth:{bandwidth},ISP:BGP",
             "price_type": "Hour",
         },
     ]
@@ -47,7 +44,7 @@ PRODUCT = {
     "code": "eip",
     "name": "EIP",
     "display_name": "EIP 弹性公网IP",
-    "product_type": "eip",
+    "product_type": "",
     "category": Category.NETWORK,
     "params": [
         {

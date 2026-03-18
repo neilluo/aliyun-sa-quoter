@@ -72,7 +72,7 @@ PRODUCT = {
     "code": "slb",
     "name": "SLB",
     "display_name": "SLB 负载均衡",
-    "product_type": "slb",
+    "product_type": "",
     "category": Category.NETWORK,
     "params": [
         {

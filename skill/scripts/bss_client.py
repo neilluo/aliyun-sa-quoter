@@ -245,13 +245,14 @@ def query_product_list(client, page_num=1, page_size=50):
     return products
 
 
-def describe_pricing_modules(client, product_code, subscription_type="Subscription"):
+def describe_pricing_modules(client, product_code, subscription_type="Subscription", product_type=None):
     """Describe pricing modules for a product.
 
     Args:
         client: (ak, sk) tuple
         product_code: e.g. "ecs", "rds", "slb"
         subscription_type: "Subscription" or "PayAsYouGo"
+        product_type: optional product type (required for some products like OSS)
 
     Returns list of dicts with keys: module_code, module_name, config_list.
     """
@@ -261,6 +262,8 @@ def describe_pricing_modules(client, product_code, subscription_type="Subscripti
         "ProductCode": product_code,
         "SubscriptionType": subscription_type,
     }
+    if product_type is not None:
+        params["ProductType"] = product_type
 
     try:
         body = _call_api("DescribePricingModule", params, ak, sk)
@@ -367,7 +370,7 @@ def get_subscription_price(client, product_code, module_list, region, duration=1
         "Quantity": str(quantity),
     }
 
-    if product_type:
+    if product_type is not None:
         params["ProductType"] = product_type
 
     # Flatten module list into indexed params
@@ -405,7 +408,7 @@ def get_pay_as_you_go_price(client, product_code, module_list, region,
         "Region": region,
     }
 
-    if product_type:
+    if product_type is not None:
         params["ProductType"] = product_type
 
     # Flatten module list into indexed params

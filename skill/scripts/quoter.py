@@ -74,8 +74,11 @@ def cmd_modules(args):
     """Describe pricing modules for a product via BSS API."""
     try:
         client = bss_client.create_client()
+        # Get product_type from registry if available
+        product = registry.get_product(args.product)
+        product_type = product.get("product_type") if product else None
         modules = bss_client.describe_pricing_modules(
-            client, args.product, args.type
+            client, args.product, args.type, product_type
         )
         print(formatters.format_pricing_modules(args.product, modules))
         return 0

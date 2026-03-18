@@ -17,10 +17,21 @@ def build_modules(params: Dict[str, Any]) -> List[Dict[str, str]]:
     capacity = params.get("capacity", 100)
     storage_class = params.get("storage_class", "Standard")
 
+    # Map storage class to StorageType value
+    # Standard -> StandardStorage (标准型存储容量)
+    # IA -> IAStorage (低频访问型存储容量)
+    # Archive -> ArchiveStorage (归档型存储容量)
+    storage_type_map = {
+        "Standard": "StandardStorage",
+        "IA": "IAStorage",
+        "Archive": "ArchiveStorage",
+    }
+    storage_type = storage_type_map.get(storage_class, "StandardStorage")
+
     modules = [
         {
-            "module_code": "Capacity",
-            "config": f"Capacity:{capacity},StorageClass:{storage_class}",
+            "module_code": "Storage",
+            "config": f"Storage:{capacity},StorageType:{storage_type}",
             "price_type": "Hour",
         },
     ]
@@ -46,7 +57,7 @@ PRODUCT = {
     "code": "oss",
     "name": "OSS",
     "display_name": "OSS 对象存储",
-    "product_type": "oss",
+    "product_type": "",
     "category": Category.STORAGE,
     "params": [
         {
