@@ -1,8 +1,10 @@
-"""RocketMQ 5.0 (消息队列 RocketMQ 5.0) product definition - ai_friendly format.
+"""RocketMQ 4.0 (消息队列 RocketMQ 4.0) product definition - ai_friendly format.
 
 ProductCode: ons
-ProductType: ons_rmqsub_public_cn (Subscription), ons_rmqpost_public_cn (PayAsYouGo)
+ProductType: ons (标准版), onspre (企业铂金版)
 API docs: https://help.aliyun.com/document_detail/170253.html
+
+Note: BSS API supports RocketMQ 4.0, not 5.0.
 """
 
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -19,20 +21,20 @@ from ai_friendly.types import ParamDef, ModuleSpec
 
 CODE: str = "ons"
 NAME: str = "RocketMQ"
-DISPLAY_NAME: str = "消息队列 RocketMQ 5.0"
+DISPLAY_NAME: str = "消息队列 RocketMQ 4.0"
 CATEGORY: str = Category.MIDDLEWARE
 
 
 def _get_product_type(params: Dict[str, Any]) -> Optional[str]:
     """Determine ProductType based on subscription type.
 
-    - Subscription (包年包月) uses "ons_rmqsub_public_cn"
-    - PayAsYouGo (按量付费) uses "ons_rmqpost_public_cn"
+    - Subscription (包年包月) uses "onspre" (企业铂金版)
+    - PayAsYouGo (按量付费) uses "ons" (标准版)
     """
     subscription_type = params.get("subscription_type", BillingType.SUBSCRIPTION)
     if subscription_type == BillingType.PAY_AS_YOU_GO:
-        return "ons_rmqpost_public_cn"
-    return "ons_rmqsub_public_cn"
+        return "ons"
+    return "onspre"
 
 
 PRODUCT_TYPE: Optional[Union[str, Callable]] = _get_product_type
