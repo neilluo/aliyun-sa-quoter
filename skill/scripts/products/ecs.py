@@ -29,8 +29,8 @@ def build_modules(params: Dict[str, Any]) -> List[Dict[str, str]]:
     data_disk_size = params.get("data_disk_size", 0)
     internet_bandwidth = params.get("internet_bandwidth", 0)
 
-    # Check if we should exclude system disk
-    exclude_system_disk = params.get("exclude_system_disk", False)
+    # Check if we should include system disk (default: False - exclude system disk)
+    include_system_disk = params.get("include_system_disk", False)
 
     family = _extract_instance_family(instance_type)
 
@@ -47,14 +47,8 @@ def build_modules(params: Dict[str, Any]) -> List[Dict[str, str]]:
         },
     ]
 
-    # SystemDisk - use size 0 if excluded
-    if exclude_system_disk:
-        modules.append({
-            "module_code": "SystemDisk",
-            "config": f"SystemDisk.Category:{system_disk_category},SystemDisk.Size:0",
-            "price_type": "Hour",
-        })
-    else:
+    # SystemDisk - only include if explicitly requested
+    if include_system_disk:
         modules.append({
             "module_code": "SystemDisk",
             "config": (
@@ -91,11 +85,17 @@ def build_modules(params: Dict[str, Any]) -> List[Dict[str, str]]:
 
 def format_summary(params: Dict[str, Any]) -> Dict[str, str]:
     """Build human-readable config summary."""
+    include_system_disk = params.get("include_system_disk", False)
+    
     summary = {
         "实例规格": params["instance_type"],
         "操作系统": params.get("image_os", "linux"),
-        "系统盘": f"{params.get('system_disk_category', DiskType.ESSD)} {params.get('system_disk_size', 40)}GB",
     }
+    
+    # Only show system disk if explicitly included
+    if include_system_disk:
+        summary["系统盘"] = f"{params.get('system_disk_category', DiskType.ESSD)} {params.get('system_disk_size', 40)}GB"
+    
     data_disk_size = params.get("data_disk_size", 0)
     if data_disk_size and int(data_disk_size) > 0:
         cat = params.get("data_disk_category") or params.get("system_disk_category", DiskType.ESSD)
@@ -149,13 +149,23 @@ PRODUCT = {
             "examples": ["linux", "windows"],
         },
         {
+            "name": "include_system_disk",
+            "label": "包含系统盘",
+            "type": "bool",
+            "required": False,
+            "default": False,
+            "choices": None,
+            "description": "是否将系统盘价格计入总价（默认 false，仅计算实例价格）",
+            "examples": [False, True],
+        },
+        {
             "name": "system_disk_category",
             "label": "系统盘类型",
             "type": "string",
             "required": False,
             "default": DiskType.ESSD,
             "choices": [DiskType.ESSD, DiskType.SSD, DiskType.EFFICIENCY],
-            "description": "系统盘类型：cloud_essd (ESSD), cloud_ssd (SSD), cloud_efficiency (高效云盘)",
+            "description": "系统盘类型：cloud_essd (ESSD), cloud_ssd (SSD), cloud_efficiency (高效云盘)。仅在 include_system_disk=true 时生效",
             "examples": [DiskType.ESSD],
         },
         {
@@ -165,7 +175,7 @@ PRODUCT = {
             "required": False,
             "default": 40,
             "choices": None,
-            "description": "系统盘大小 (GB)，最小 20GB",
+            "description": "系统盘大小 (GB)，最小 20GB。仅在 include_system_disk=true 时生效",
             "examples": [40, 100],
         },
         {
