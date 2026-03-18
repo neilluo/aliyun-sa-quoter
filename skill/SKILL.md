@@ -232,6 +232,33 @@ Map natural language to `--params` JSON keys:
 - **g7** (通用型): CPU:Memory = 1:4
 - **r7** (内存型): CPU:Memory = 1:8
 
+## Multi-Instance Price Comparison (ECS)
+
+When the user specifies vCPU and memory requirements (e.g., "16核64G"), **ALWAYS query multiple instance types** and present a comparison table.
+
+**Example workflow for "北京16核64G":**
+
+1. Identify matching instance types from the reference table:
+   - 16核64G matches: ecs.g7.4xlarge, ecs.g8i.4xlarge, ecs.g8y.4xlarge, ecs.g8a.4xlarge, etc.
+
+2. Query prices for ALL matching instance types:
+   ```bash
+   # Query each instance type
+   python3 quoter.py price ecs --params '{"instance_type":"ecs.g7.4xlarge"}' ...
+   python3 quoter.py price ecs --params '{"instance_type":"ecs.g8y.4xlarge"}' ...
+   python3 quoter.py price ecs --params '{"instance_type":"ecs.g8a.4xlarge"}' ...
+   # ... etc
+   ```
+
+3. Present results in a comparison table:
+   | 实例类型 | 系列 | 价格/月 | 推荐度 |
+   |----------|------|---------|--------|
+   | ecs.g8y.4xlarge | ARM | ¥1,576 | ⭐ 最优 |
+   | ecs.g8a.4xlarge | AMD | ¥1,999 | 较好 |
+   | ecs.g7.4xlarge | Intel | ¥2,049 | 标准 |
+
+**Key rule**: Do NOT return just one instance type when the user asks for a configuration. Always provide options.
+
 ## Error Handling
 
 - **Credentials missing**: Script prints setup instructions with the AccessKey management URL. Guide the user to configure environment variables.
