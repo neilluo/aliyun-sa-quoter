@@ -59,8 +59,8 @@ PARAMS: List[ParamDef] = [
         "name": "billing_mode",
         "label": "计费模式",
         "type": "string",
-        "required": True,
-        "default": None,
+        "required": False,
+        "default": BillingType.SUBSCRIPTION,
         "choices": [BillingType.SUBSCRIPTION, BillingType.PAY_AS_YOU_GO],
         "description": "计费模式: Subscription(包年包月), PayAsYouGo(按量付费)",
         "examples": [BillingType.SUBSCRIPTION, BillingType.PAY_AS_YOU_GO],
@@ -214,71 +214,11 @@ PARAMS: List[ParamDef] = [
 # MODULES SECTION
 # =============================================================================
 
-# 包年包月模块定义
+# 包年包月模块定义 (简化版 - 只保留核心 PackageCode)
 _SUBSCRIPTION_MODULES: List[ModuleSpec] = [
     {
         "module_code": "PackageCode",
         "config_template": "Region:{region},PackageCode:{package_code}",
-    },
-    {
-        "module_code": "QPSPackage",
-        "config_template": "botWeb:{bot_web},apisec:{apisec},botApp:{bot_app},Region:{region},QPSPackage:{qps_package}",
-        "condition": lambda p: p.get("qps_package", 0) > 0,
-    },
-    {
-        "module_code": "ExtDomainPackage",
-        "config_template": "ExtDomainPackage:{ext_domain_package},Region:{region},PackageCode:{package_code}",
-        "condition": lambda p: p.get("ext_domain_package", 0) > 0,
-    },
-    {
-        "module_code": "botWeb",
-        "config_template": "botWeb:1,Region:{region},bot_version:1,PackageCode:{package_code}",
-        "condition": lambda p: p.get("bot_web", 0) == 1,
-    },
-    {
-        "module_code": "botApp",
-        "config_template": "botApp:1,Region:{region},bot_version:1",
-        "condition": lambda p: p.get("bot_app", 0) == 1,
-    },
-    {
-        "module_code": "apisec",
-        "config_template": "apisec:1,Region:{region},PackageCode:{package_code}",
-        "condition": lambda p: p.get("apisec", 0) == 1,
-    },
-    {
-        "module_code": "domainVip",
-        "config_template": "Region:{region},domainVip:{domain_vip}",
-        "condition": lambda p: p.get("domain_vip", 0) > 0,
-    },
-    {
-        "module_code": "LogStorage",
-        "config_template": "Region:{region},LogStorage:{log_storage}",
-        "condition": lambda p: p.get("log_storage", 0) > 0,
-    },
-    {
-        "module_code": "WafGslb",
-        "config_template": "Region:{region},WafGslb:1",
-        "condition": lambda p: p.get("waf_gslb", 0) == 1,
-    },
-    {
-        "module_code": "HybridCloudNode",
-        "config_template": "Region:{region},PackageCode:{package_code},HybridCloudNode:{hybrid_cloud_node}",
-        "condition": lambda p: p.get("hybrid_cloud_node", 0) > 0,
-    },
-    {
-        "module_code": "BlueTeaming",
-        "config_template": "BlueTeaming:1,Region:{region},PackageCode:{package_code}",
-        "condition": lambda p: p.get("blue_teaming", 0) == 1,
-    },
-    {
-        "module_code": "spikeThrottle",
-        "config_template": "Region:{region},spikeThrottle:{spike_throttle}",
-        "condition": lambda p: p.get("spike_throttle", 0) > 0,
-    },
-    {
-        "module_code": "ElasticQps",
-        "config_template": "botWeb:{bot_web},apisec:{apisec},botApp:{bot_app},Region:{region},ElasticQps:{elastic_qps}",
-        "condition": lambda p: p.get("elastic_qps", 0) > 0,
     },
 ]
 
