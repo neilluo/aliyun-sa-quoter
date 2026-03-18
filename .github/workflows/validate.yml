@@ -1,0 +1,45 @@
+name: Validate Products
+
+on:
+  push:
+    paths:
+      - 'skill/scripts/products/*.py'
+  pull_request:
+    paths:
+      - 'skill/scripts/products/*.py'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Validate all products
+      env:
+        ALIBABA_CLOUD_ACCESS_KEY_ID: ${{ secrets.ALIBABA_CLOUD_ACCESS_KEY_ID }}
+        ALIBABA_CLOUD_ACCESS_KEY_SECRET: ${{ secrets.ALIBABA_CLOUD_ACCESS_KEY_SECRET }}
+      run: |
+        cd skill/scripts
+        python3 validate_products.py
+    
+    - name: Validate changed products (detailed)
+      if: github.event_name == 'pull_request'
+      env:
+        ALIBABA_CLOUD_ACCESS_KEY_ID: ${{ secrets.ALIBABA_CLOUD_ACCESS_KEY_ID }}
+        ALIBABA_CLOUD_ACCESS_KEY_SECRET: ${{ secrets.ALIBABA_CLOUD_ACCESS_KEY_SECRET }}
+      run: |
+        cd skill/scripts
+        # Get changed files
+        CHANGED_FILES=$(git diff --name-only origin/main...HEAD | grep 'products/.*\.py$' || true)
+        for file in $CHANGED_FILES; do
+          if [ -f "$file" ]; then
+            echo "Validating: $file"
+            python3 validate_product_template.py "$file"
+          fi
+        done

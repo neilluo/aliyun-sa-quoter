@@ -6,11 +6,36 @@ in a global registry for lookup by product code.
 """
 
 import importlib
+import os
 import sys
 from pathlib import Path
 
 
 _REGISTRY = {}
+
+# Cache for BSS API product list
+_BSS_PRODUCTS_CACHE = None
+
+
+def _get_bss_products():
+    """Get product list from BSS API (cached)."""
+    global _BSS_PRODUCTS_CACHE
+    if _BSS_PRODUCTS_CACHE is not None:
+        return _BSS_PRODUCTS_CACHE
+    
+    # Only validate if credentials are available
+    if not os.environ.get("ALIBABA_CLOUD_ACCESS_KEY_ID"):
+        return None
+    
+    try:
+        # Lazy import to avoid circular dependency
+        import bss_client
+        client = bss_client.create_client()
+        products = bss_client.query_product_list(client, page_size=100)
+        _BSS_PRODUCTS_CACHE = {p['product_code'] for p in products}
+        return _BSS_PRODUCTS_CACHE
+    except Exception:
+        return None
 
 # Required fields in every PRODUCT dict
 _REQUIRED_FIELDS = {"code", "name", "display_name", "params", "build_modules", "format_summary"}
@@ -44,6 +69,17 @@ def _validate_product(product, source_file):
     if "validate" in product and product["validate"] is not None:
         if not callable(product["validate"]):
             errors.append(f"{source_file}: 'validate' must be callable or None")
+    
+    # Validate BSS API product code (if available)
+    if "code" in product:
+        code = product["code"]
+        bss_code = product.get("bss_product_code", code)
+        
+        # Skip local calculation products
+        if code != "bailian":
+            bss_products = _get_bss_products()
+            if bss_products is not None and bss_code not in bss_products:
+                errors.append(f"{source_file}: ProductCode '{bss_code}' not found in BSS API")
 
     return errors
 
