@@ -56,74 +56,34 @@ PARAMS: List[ParamDef] = [
         "examples": [Region.HANGZHOU, Region.BEIJING, Region.SHANGHAI],
     },
     {
-        "name": "chip_type",
-        "label": "架构类型",
-        "type": "string",
-        "required": True,
-        "default": "x86",
-        "choices": ["x86", "arm"],
-        "description": "芯片架构类型: x86 或 arm",
-        "examples": ["x86", "arm"],
-    },
-    {
-        "name": "msg_process_spec",
-        "label": "消息收发计算规格",
-        "type": "string",
-        "required": True,
-        "default": "rmq.su.2xlarge",
-        "choices": None,
-        "description": "消息收发计算规格，如 rmq.su.2xlarge (8核16G)",
-        "examples": ["rmq.su.2xlarge", "rmq.su.4xlarge"],
-    },
-    {
-        "name": "msg_store_spec",
-        "label": "消息存储规格",
-        "type": "string",
-        "required": True,
-        "default": "rmq.ssu.2xlarge",
-        "choices": ["rmq.ssu.2xlarge", "rmq.ssu.4xlarge", "rmq.ssu.6xlarge", "rmq.ssu.8xlarge"],
-        "description": "消息存储规格，如 rmq.ssu.2xlarge (8核16G)",
-        "examples": ["rmq.ssu.2xlarge", "rmq.ssu.4xlarge"],
-    },
-    {
-        "name": "series_type",
-        "label": "系列类型",
-        "type": "string",
-        "required": True,
-        "default": "standard",
-        "choices": ["standard", "professional"],
-        "description": "系列类型: standard(标准版), professional(专业版)",
-        "examples": ["standard", "professional"],
-    },
-    {
-        "name": "flow_out_bandwidth",
-        "label": "公网带宽",
+        "name": "topic_capacity",
+        "label": "Topic数上限",
         "type": "int",
         "required": False,
-        "default": 0,
+        "default": 25,
         "choices": None,
-        "description": "公网带宽(MB/s)，范围 0-600，0表示不开通",
-        "examples": [0, 100, 200],
+        "description": "Topic数量上限 (25-3000, 步长5)",
+        "examples": [25, 100, 500],
     },
     {
-        "name": "flow_out_type",
-        "label": "公网计费类型",
-        "type": "string",
-        "required": False,
-        "default": "payByTraffic",
-        "choices": ["payByTraffic", "fixedBandwidth"],
-        "description": "公网计费类型: payByTraffic(按流量), fixedBandwidth(固定带宽)",
-        "examples": ["payByTraffic", "fixedBandwidth"],
-    },
-    {
-        "name": "topic_paid",
-        "label": "付费Topic数量",
+        "name": "tps_max",
+        "label": "TPS峰值",
         "type": "int",
         "required": False,
-        "default": 0,
-        "choices": None,
-        "description": "付费Topic数量，≥0",
-        "examples": [0, 10, 50],
+        "default": 5000,
+        "choices": [5000, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000, 110000, 120000, 130000, 140000, 150000, 160000, 170000, 180000, 190000, 200000, 210000, 220000, 230000, 240000, 250000, 260000, 270000, 280000, 290000, 300000, 310000, 320000, 330000, 340000, 350000, 360000, 370000, 380000, 390000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000],
+        "description": "每秒消息处理峰值(条/秒)",
+        "examples": [5000, 10000, 50000],
+    },
+    {
+        "name": "message_capacity",
+        "label": "消息存储容量",
+        "type": "int",
+        "required": False,
+        "default": 700,
+        "choices": [700, 1400, 1500, 2500, 2800, 3000, 5000, 6000, 10000, 15000, 19000],
+        "description": "消息存储容量(GB)",
+        "examples": [700, 1400, 5000],
     },
     {
         "name": "subscription_type",
@@ -142,28 +102,19 @@ PARAMS: List[ParamDef] = [
 # MODULES SECTION
 # =============================================================================
 
+# RocketMQ 4.0 企业铂金版 modules (from BSS API)
 MODULES: List[ModuleSpec] = [
     {
-        "module_code": "msg_process_spec",
-        "config_template": "chip_type:{chip_type},region:{region},msg_process_spec:{msg_process_spec}",
+        "module_code": "Topic_capacity",
+        "config_template": "Region:{region},Topic_capacity:{topic_capacity}",
     },
     {
-        "module_code": "msg_store_spec",
-        "config_template": "msg_store_spec:{msg_store_spec},region:{region}",
-    },
-    {
-        "module_code": "flow_out_bandwidth",
-        "config_template": "flow_out_bandwidth:{flow_out_bandwidth},flow_out_type:{flow_out_type},region:{region}",
-        "condition": lambda p: p.get("flow_out_bandwidth", 0) > 0,
-    },
-    {
-        "module_code": "topic_paid",
-        "config_template": "region:{region},series_type:{series_type}",
-        "condition": lambda p: p.get("topic_paid", 0) > 0,
+        "module_code": "Tps_max",
+        "config_template": "Region:{region},Tps_max:{tps_max},Message_capacity:{message_capacity}",
     },
 ]
 
-DEFAULT_PRICE_TYPE: str = PriceType.HOUR
+DEFAULT_PRICE_TYPE: str = PriceType.MONTH
 
 
 # =============================================================================
@@ -261,39 +212,16 @@ def build_modules(params: Dict[str, Any]) -> List[Dict[str, str]]:
 
 def format_summary(params: Dict[str, Any]) -> Dict[str, str]:
     """Build human-readable config summary."""
-    series_type_map = {
-        "standard": "标准版",
-        "professional": "专业版",
-    }
-    
-    flow_out_type_map = {
-        "payByTraffic": "按流量计费",
-        "fixedBandwidth": "固定带宽",
-    }
-    
     subscription_type = params.get("subscription_type", BillingType.SUBSCRIPTION)
-    chip_type = params.get("chip_type", "x86")
-    series_type = params.get("series_type", "standard")
     
     summary = {
         "产品": DISPLAY_NAME,
         "付费模式": BillingType.DISPLAY_NAMES.get(subscription_type, subscription_type),
         "地域": params.get("region", Region.HANGZHOU),
-        "架构类型": chip_type.upper(),
-        "系列类型": series_type_map.get(series_type, series_type),
-        "消息收发规格": params.get("msg_process_spec", "rmq.su.2xlarge"),
-        "消息存储规格": params.get("msg_store_spec", "rmq.ssu.2xlarge"),
+        "Topic数上限": str(params.get("topic_capacity", 100)),
+        "TPS峰值": str(params.get("tps_max", 1000)),
+        "消息存储容量": f"{params.get('message_capacity', 100)}GB",
     }
-    
-    flow_out_bandwidth = params.get("flow_out_bandwidth", 0)
-    if flow_out_bandwidth > 0:
-        flow_out_type = params.get("flow_out_type", "payByTraffic")
-        summary["公网带宽"] = f"{flow_out_bandwidth}MB/s"
-        summary["公网计费"] = flow_out_type_map.get(flow_out_type, flow_out_type)
-    
-    topic_paid = params.get("topic_paid", 0)
-    if topic_paid > 0:
-        summary["付费Topic数"] = str(topic_paid)
     
     return summary
 
@@ -319,22 +247,6 @@ def validate(params: Dict[str, Any]) -> List[str]:
             errors.append(
                 f"参数 {param['label']} ({name}) 的值 '{value}' 无效，"
                 f"可选值: {', '.join(str(c) for c in choices)}"
-            )
-    
-    # Run validation rules
-    if VALIDATION_RULES:
-        validator = Validator(VALIDATION_RULES)
-        errors.extend(validator.validate(params))
-    
-    # Custom validation for msg_process_spec
-    chip_type = params.get("chip_type", "x86")
-    msg_process_spec = params.get("msg_process_spec")
-    if msg_process_spec:
-        valid_process_specs = _get_valid_process_specs(chip_type)
-        if msg_process_spec not in valid_process_specs:
-            errors.append(
-                f"msg_process_spec '{msg_process_spec}' 与 chip_type '{chip_type}' 不匹配，"
-                f"可选值: {', '.join(valid_process_specs)}"
             )
     
     return errors
