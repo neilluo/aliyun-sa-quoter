@@ -38,15 +38,21 @@ PRICING_TABLE = {
                 {"max_tokens": 128000, "price_per_million": 4.0},
                 {"max_tokens": 252000, "price_per_million": 7.0},
             ],
-            "output_price_per_million": 10.0,
-            "thinking_output_price_per_million": 10.0,
+            "output_tiers": [
+                {"max_tokens": 252000, "price_per_million": 10.0},
+            ],
+            "thinking_output_tiers": [
+                {"max_tokens": 252000, "price_per_million": 10.0},
+            ],
             "supports_batch": True,
             "supports_context_cache": True,
         },
         "qwen-max": {
             "input_tiers": [{"max_tokens": 32000, "price_per_million": 2.4}],
-            "output_price_per_million": 9.6,
-            "thinking_output_price_per_million": None,
+            "output_tiers": [
+                {"max_tokens": 32000, "price_per_million": 9.6},
+            ],
+            "thinking_output_tiers": None,
             "supports_batch": True,
             "supports_context_cache": False,
         },
@@ -56,8 +62,16 @@ PRICING_TABLE = {
                 {"max_tokens": 256000, "price_per_million": 2.0},
                 {"max_tokens": 1000000, "price_per_million": 4.0},
             ],
-            "output_price_per_million": 4.8,
-            "thinking_output_price_per_million": 4.8,
+            "output_tiers": [
+                {"max_tokens": 128000, "price_per_million": 4.8},
+                {"max_tokens": 256000, "price_per_million": 12.0},
+                {"max_tokens": 1000000, "price_per_million": 24.0},
+            ],
+            "thinking_output_tiers": [
+                {"max_tokens": 128000, "price_per_million": 4.8},
+                {"max_tokens": 256000, "price_per_million": 12.0},
+                {"max_tokens": 1000000, "price_per_million": 24.0},
+            ],
             "supports_batch": True,
             "supports_context_cache": False,
         },
@@ -67,8 +81,12 @@ PRICING_TABLE = {
                 {"max_tokens": 256000, "price_per_million": 2.4},
                 {"max_tokens": 1000000, "price_per_million": 4.8},
             ],
-            "output_price_per_million": 2.0,
-            "thinking_output_price_per_million": 8.0,
+            "output_tiers": [
+                {"max_tokens": 1000000, "price_per_million": 2.0},
+            ],
+            "thinking_output_tiers": [
+                {"max_tokens": 1000000, "price_per_million": 8.0},
+            ],
             "supports_batch": True,
             "supports_context_cache": True,
         },
@@ -78,8 +96,12 @@ PRICING_TABLE = {
                 {"max_tokens": 256000, "price_per_million": 0.8},
                 {"max_tokens": 1000000, "price_per_million": 1.2},
             ],
-            "output_price_per_million": 2.0,
-            "thinking_output_price_per_million": None,
+            "output_tiers": [
+                {"max_tokens": 128000, "price_per_million": 2.0},
+                {"max_tokens": 256000, "price_per_million": 8.0},
+                {"max_tokens": 1000000, "price_per_million": 12.0},
+            ],
+            "thinking_output_tiers": None,
             "supports_batch": True,
             "supports_context_cache": True,
         },
@@ -89,8 +111,10 @@ PRICING_TABLE = {
                 {"max_tokens": 256000, "price_per_million": 0.6},
                 {"max_tokens": 1000000, "price_per_million": 1.2},
             ],
-            "output_price_per_million": 1.5,
-            "thinking_output_price_per_million": None,
+            "output_tiers": [
+                {"max_tokens": 1000000, "price_per_million": 1.5},
+            ],
+            "thinking_output_tiers": None,
             "supports_batch": True,
             "supports_context_cache": True,
         },
@@ -211,11 +235,17 @@ def _get_input_price_per_million(model_config, input_tokens):
     return tiers[-1]["price_per_million"]
 
 
-def _get_output_price_per_million(model_config, thinking=False):
-    """获取输出单价。"""
-    if thinking and model_config["thinking_output_price_per_million"] is not None:
-        return model_config["thinking_output_price_per_million"]
-    return model_config["output_price_per_million"]
+def _get_output_price_per_million(model_config, output_tokens, thinking=False):
+    """根据输出 Token 数和阶梯定价规则计算输出单价。"""
+    if thinking and model_config.get("thinking_output_tiers") is not None:
+        tiers = model_config["thinking_output_tiers"]
+    else:
+        tiers = model_config["output_tiers"]
+    
+    for tier in tiers:
+        if output_tokens <= tier["max_tokens"]:
+            return tier["price_per_million"]
+    return tiers[-1]["price_per_million"]
 
 
 def calculate_price(params):
@@ -237,7 +267,7 @@ def calculate_price(params):
         raise ValueError(f"不支持的模型: {model}")
 
     input_unit_price = _get_input_price_per_million(model_config, input_tokens)
-    output_unit_price = _get_output_price_per_million(model_config, thinking)
+    output_unit_price = _get_output_price_per_million(model_config, output_tokens, thinking)
 
     input_price = input_tokens * input_unit_price / 1_000_000
     output_price = output_tokens * output_unit_price / 1_000_000
@@ -328,7 +358,7 @@ def validate(params):
             errors.append(f"模型 '{model}' 在地域 '{region}' 不可用")
         else:
             model_config = region_config.get(model, {})
-            if thinking and model_config.get("thinking_output_price_per_million") is None:
+            if thinking and model_config.get("thinking_output_tiers") is None:
                 errors.append(f"模型 '{model}' 不支持思考模式")
             if context_cache and not model_config.get("supports_context_cache", False):
                 errors.append(f"模型 '{model}' 不支持上下文缓存")
