@@ -157,6 +157,103 @@ PRICING_TABLE = {
             "thinking_output_tiers": None,
             "supports_thinking": False,
         },
+        "qwen3-vl-plus": {
+            "input_tiers": [
+                {"max_tokens": 32000, "price_per_million": 2.0},
+                {"max_tokens": 128000, "price_per_million": 4.0},
+                {"max_tokens": 256000, "price_per_million": 8.0},
+            ],
+            "output_tiers": [
+                {"max_tokens": 32000, "price_per_million": 8.0},
+                {"max_tokens": 128000, "price_per_million": 16.0},
+                {"max_tokens": 256000, "price_per_million": 32.0},
+            ],
+            "thinking_output_tiers": [
+                {"max_tokens": 32000, "price_per_million": 8.0},
+                {"max_tokens": 128000, "price_per_million": 16.0},
+                {"max_tokens": 256000, "price_per_million": 32.0},
+            ],
+            "supports_thinking": True,
+        },
+        "qwen3-vl-flash": {
+            "input_tiers": [
+                {"max_tokens": 32000, "price_per_million": 1.5},
+                {"max_tokens": 128000, "price_per_million": 3.0},
+                {"max_tokens": 256000, "price_per_million": 6.0},
+            ],
+            "output_tiers": [
+                {"max_tokens": 32000, "price_per_million": 6.0},
+                {"max_tokens": 128000, "price_per_million": 12.0},
+                {"max_tokens": 256000, "price_per_million": 24.0},
+            ],
+            "thinking_output_tiers": [
+                {"max_tokens": 32000, "price_per_million": 6.0},
+                {"max_tokens": 128000, "price_per_million": 12.0},
+                {"max_tokens": 256000, "price_per_million": 24.0},
+            ],
+            "supports_thinking": True,
+        },
+        "qwen-vl-max": {
+            "input_tiers": [{"max_tokens": 32000, "price_per_million": 2.4}],
+            "output_tiers": [
+                {"max_tokens": 32000, "price_per_million": 9.6},
+            ],
+            "thinking_output_tiers": None,
+            "supports_thinking": False,
+        },
+        "qwen-vl-plus": {
+            "input_tiers": [{"max_tokens": 32000, "price_per_million": 2.0}],
+            "output_tiers": [
+                {"max_tokens": 32000, "price_per_million": 8.0},
+            ],
+            "thinking_output_tiers": None,
+            "supports_thinking": False,
+        },
+        "qwen-vl-ocr": {
+            "input_tiers": [{"max_tokens": 32000, "price_per_million": 1.5}],
+            "output_tiers": [
+                {"max_tokens": 32000, "price_per_million": 6.0},
+            ],
+            "thinking_output_tiers": None,
+            "supports_thinking": False,
+        },
+        "qwen-math-plus": {
+            "input_tiers": [{"max_tokens": 32000, "price_per_million": 2.0}],
+            "output_tiers": [
+                {"max_tokens": 32000, "price_per_million": 8.0},
+            ],
+            "thinking_output_tiers": None,
+            "supports_thinking": False,
+        },
+        "qwen-math-turbo": {
+            "input_tiers": [{"max_tokens": 32000, "price_per_million": 1.5}],
+            "output_tiers": [
+                {"max_tokens": 32000, "price_per_million": 6.0},
+            ],
+            "thinking_output_tiers": None,
+            "supports_thinking": False,
+        },
+        "qwen3-coder-plus": {
+            "input_tiers": [
+                {"max_tokens": 32000, "price_per_million": 2.0},
+                {"max_tokens": 128000, "price_per_million": 4.0},
+                {"max_tokens": 256000, "price_per_million": 8.0},
+                {"max_tokens": 1000000, "price_per_million": 16.0},
+            ],
+            "output_tiers": [
+                {"max_tokens": 32000, "price_per_million": 8.0},
+                {"max_tokens": 128000, "price_per_million": 16.0},
+                {"max_tokens": 256000, "price_per_million": 32.0},
+                {"max_tokens": 1000000, "price_per_million": 64.0},
+            ],
+            "thinking_output_tiers": [
+                {"max_tokens": 32000, "price_per_million": 8.0},
+                {"max_tokens": 128000, "price_per_million": 16.0},
+                {"max_tokens": 256000, "price_per_million": 32.0},
+                {"max_tokens": 1000000, "price_per_million": 64.0},
+            ],
+            "supports_thinking": True,
+        },
     },
 }
 
@@ -174,6 +271,14 @@ MODEL_DISPLAY = {
     "qwen-turbo": "通义千问-Turbo",
     "qwq-plus": "QwQ-Plus",
     "qwen-long": "通义千问-Long",
+    "qwen3-vl-plus": "通义千问3-VL-Plus",
+    "qwen3-vl-flash": "通义千问3-VL-Flash",
+    "qwen-vl-max": "通义千问-VL-Max",
+    "qwen-vl-plus": "通义千问-VL-Plus",
+    "qwen-vl-ocr": "通义千问-VL-OCR",
+    "qwen-math-plus": "通义千问-Math-Plus",
+    "qwen-math-turbo": "通义千问-Math-Turbo",
+    "qwen3-coder-plus": "通义千问3-Coder-Plus",
 }
 
 
@@ -198,6 +303,14 @@ PARAMS: List[ParamDef] = [
             "qwen-turbo",
             "qwq-plus",
             "qwen-long",
+            "qwen3-vl-plus",
+            "qwen3-vl-flash",
+            "qwen-vl-max",
+            "qwen-vl-plus",
+            "qwen-vl-ocr",
+            "qwen-math-plus",
+            "qwen-math-turbo",
+            "qwen3-coder-plus",
         ],
         "description": "百炼大模型名称",
         "examples": ["qwen3-max", "qwen-plus"],
