@@ -4,7 +4,7 @@ ProductCode: bailian
 计费方式: 按 Token 计费（输入 + 输出分开计费）
 特点: 静态定价表，不走 BSS API，本地计算价格
 
-价格数据最后更新: 2026-03-11
+价格数据最后更新: 2026-03-20
 来源: https://help.aliyun.com/zh/model-studio/model-pricing
 """
 
@@ -39,13 +39,14 @@ PRICING_TABLE = {
                 {"max_tokens": 252000, "price_per_million": 7.0},
             ],
             "output_tiers": [
-                {"max_tokens": 252000, "price_per_million": 10.0},
+                {"max_tokens": 32000, "price_per_million": 10.0},
             ],
             "thinking_output_tiers": [
-                {"max_tokens": 252000, "price_per_million": 10.0},
+                {"max_tokens": 32000, "price_per_million": 10.0},
+                {"max_tokens": 128000, "price_per_million": 16.0},
+                {"max_tokens": 252000, "price_per_million": 28.0},
             ],
-            "supports_batch": True,
-            "supports_context_cache": True,
+            "supports_thinking": True,
         },
         "qwen-max": {
             "input_tiers": [{"max_tokens": 32000, "price_per_million": 2.4}],
@@ -53,8 +54,7 @@ PRICING_TABLE = {
                 {"max_tokens": 32000, "price_per_million": 9.6},
             ],
             "thinking_output_tiers": None,
-            "supports_batch": True,
-            "supports_context_cache": False,
+            "supports_thinking": False,
         },
         "qwen3.5-plus": {
             "input_tiers": [
@@ -72,8 +72,7 @@ PRICING_TABLE = {
                 {"max_tokens": 256000, "price_per_million": 12.0},
                 {"max_tokens": 1000000, "price_per_million": 24.0},
             ],
-            "supports_batch": True,
-            "supports_context_cache": False,
+            "supports_thinking": True,
         },
         "qwen-plus": {
             "input_tiers": [
@@ -82,13 +81,16 @@ PRICING_TABLE = {
                 {"max_tokens": 1000000, "price_per_million": 4.8},
             ],
             "output_tiers": [
-                {"max_tokens": 1000000, "price_per_million": 2.0},
+                {"max_tokens": 128000, "price_per_million": 2.0},
+                {"max_tokens": 256000, "price_per_million": 20.0},
+                {"max_tokens": 1000000, "price_per_million": 48.0},
             ],
             "thinking_output_tiers": [
-                {"max_tokens": 1000000, "price_per_million": 8.0},
+                {"max_tokens": 128000, "price_per_million": 8.0},
+                {"max_tokens": 256000, "price_per_million": 24.0},
+                {"max_tokens": 1000000, "price_per_million": 64.0},
             ],
-            "supports_batch": True,
-            "supports_context_cache": True,
+            "supports_thinking": True,
         },
         "qwen3.5-flash": {
             "input_tiers": [
@@ -101,9 +103,12 @@ PRICING_TABLE = {
                 {"max_tokens": 256000, "price_per_million": 8.0},
                 {"max_tokens": 1000000, "price_per_million": 12.0},
             ],
-            "thinking_output_tiers": None,
-            "supports_batch": True,
-            "supports_context_cache": True,
+            "thinking_output_tiers": [
+                {"max_tokens": 128000, "price_per_million": 2.0},
+                {"max_tokens": 256000, "price_per_million": 8.0},
+                {"max_tokens": 1000000, "price_per_million": 12.0},
+            ],
+            "supports_thinking": True,
         },
         "qwen-flash": {
             "input_tiers": [
@@ -112,11 +117,45 @@ PRICING_TABLE = {
                 {"max_tokens": 1000000, "price_per_million": 1.2},
             ],
             "output_tiers": [
-                {"max_tokens": 1000000, "price_per_million": 1.5},
+                {"max_tokens": 128000, "price_per_million": 1.5},
+                {"max_tokens": 256000, "price_per_million": 6.0},
+                {"max_tokens": 1000000, "price_per_million": 12.0},
+            ],
+            "thinking_output_tiers": [
+                {"max_tokens": 128000, "price_per_million": 1.5},
+                {"max_tokens": 256000, "price_per_million": 6.0},
+                {"max_tokens": 1000000, "price_per_million": 12.0},
+            ],
+            "supports_thinking": True,
+        },
+        "qwen-turbo": {
+            "input_tiers": [{"max_tokens": 1000000, "price_per_million": 0.3}],
+            "output_tiers": [
+                {"max_tokens": 1000000, "price_per_million": 0.6},
+            ],
+            "thinking_output_tiers": [
+                {"max_tokens": 1000000, "price_per_million": 3.0},
+            ],
+            "supports_thinking": True,
+        },
+        "qwq-plus": {
+            "input_tiers": [{"max_tokens": 1000000, "price_per_million": 1.6}],
+            "output_tiers": [
+                {"max_tokens": 1000000, "price_per_million": 4.0},
+            ],
+            "thinking_output_tiers": [
+                {"max_tokens": 1000000, "price_per_million": 4.0},
+            ],
+            "supports_thinking": True,
+            "thinking_only": True,
+        },
+        "qwen-long": {
+            "input_tiers": [{"max_tokens": 10000000, "price_per_million": 0.5}],
+            "output_tiers": [
+                {"max_tokens": 10000000, "price_per_million": 2.0},
             ],
             "thinking_output_tiers": None,
-            "supports_batch": True,
-            "supports_context_cache": True,
+            "supports_thinking": False,
         },
     },
 }
@@ -132,6 +171,9 @@ MODEL_DISPLAY = {
     "qwen-plus": "通义千问-Plus",
     "qwen3.5-flash": "通义千问3.5-Flash",
     "qwen-flash": "通义千问-Flash",
+    "qwen-turbo": "通义千问-Turbo",
+    "qwq-plus": "QwQ-Plus",
+    "qwen-long": "通义千问-Long",
 }
 
 
@@ -146,7 +188,17 @@ PARAMS: List[ParamDef] = [
         "type": "string",
         "required": True,
         "default": None,
-        "choices": ["qwen3-max", "qwen-max", "qwen3.5-plus", "qwen-plus", "qwen3.5-flash", "qwen-flash"],
+        "choices": [
+            "qwen3-max",
+            "qwen-max",
+            "qwen3.5-plus",
+            "qwen-plus",
+            "qwen3.5-flash",
+            "qwen-flash",
+            "qwen-turbo",
+            "qwq-plus",
+            "qwen-long",
+        ],
         "description": "百炼大模型名称",
         "examples": ["qwen3-max", "qwen-plus"],
     },
@@ -188,26 +240,6 @@ PARAMS: List[ParamDef] = [
         "default": False,
         "choices": None,
         "description": "是否启用思考模式",
-        "examples": [False, True],
-    },
-    {
-        "name": "batch",
-        "label": "Batch 调用",
-        "type": "bool",
-        "required": False,
-        "default": False,
-        "choices": None,
-        "description": "是否使用 Batch 调用（50% 折扣）",
-        "examples": [False, True],
-    },
-    {
-        "name": "context_cache",
-        "label": "上下文缓存",
-        "type": "bool",
-        "required": False,
-        "default": False,
-        "choices": None,
-        "description": "是否启用上下文缓存",
         "examples": [False, True],
     },
 ]
@@ -255,8 +287,6 @@ def calculate_price(params):
     input_tokens = params["input_tokens"]
     output_tokens = params["output_tokens"]
     thinking = params.get("thinking", False)
-    batch = params.get("batch", False)
-    context_cache = params.get("context_cache", False)
 
     region_config = PRICING_TABLE.get(region)
     if not region_config:
@@ -272,17 +302,6 @@ def calculate_price(params):
     input_price = input_tokens * input_unit_price / 1_000_000
     output_price = output_tokens * output_unit_price / 1_000_000
 
-    discounts_applied = []
-
-    if batch:
-        input_price *= 0.5
-        output_price *= 0.5
-        discounts_applied.append("Batch调用 50% 折扣")
-
-    if context_cache:
-        input_price *= 0.5
-        discounts_applied.append("上下文缓存 50% 折扣")
-
     total_price = input_price + output_price
 
     return {
@@ -293,12 +312,9 @@ def calculate_price(params):
         "input_price": input_price,
         "output_price": output_price,
         "total_price": total_price,
-        "discounts_applied": discounts_applied,
         "model": model,
         "region": region,
         "thinking": thinking,
-        "batch": batch,
-        "context_cache": context_cache,
     }
 
 
@@ -314,8 +330,6 @@ def format_summary(params):
     input_tokens = params["input_tokens"]
     output_tokens = params["output_tokens"]
     thinking = params.get("thinking", False)
-    batch = params.get("batch", False)
-    context_cache = params.get("context_cache", False)
 
     return {
         "模型": MODEL_DISPLAY.get(model, model),
@@ -323,8 +337,6 @@ def format_summary(params):
         "输入 Token": f"{input_tokens:,}",
         "输出 Token": f"{output_tokens:,}",
         "思考模式": "是" if thinking else "否",
-        "Batch 调用": "是" if batch else "否",
-        "上下文缓存": "是" if context_cache else "否",
     }
 
 
@@ -347,8 +359,6 @@ def validate(params):
     model = params.get("model")
     region = params.get("region", "cn-beijing")
     thinking = params.get("thinking", False)
-    batch = params.get("batch", False)
-    context_cache = params.get("context_cache", False)
 
     if region not in PRICING_TABLE:
         errors.append(f"不支持的地域: '{region}'")
@@ -358,12 +368,10 @@ def validate(params):
             errors.append(f"模型 '{model}' 在地域 '{region}' 不可用")
         else:
             model_config = region_config.get(model, {})
-            if thinking and model_config.get("thinking_output_tiers") is None:
+            if thinking and not model_config.get("supports_thinking", False):
                 errors.append(f"模型 '{model}' 不支持思考模式")
-            if context_cache and not model_config.get("supports_context_cache", False):
-                errors.append(f"模型 '{model}' 不支持上下文缓存")
-            if batch and not model_config.get("supports_batch", False):
-                errors.append(f"模型 '{model}' 不支持 Batch 调用")
+            if not thinking and model_config.get("thinking_only", False):
+                errors.append(f"模型 '{model}' 仅支持思考模式")
 
     return errors
 
