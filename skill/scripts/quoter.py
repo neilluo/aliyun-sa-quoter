@@ -398,8 +398,10 @@ def cmd_price(args):
                     return 0
                 elif product_code == "oss":
                     from products.oss import calculate_price
-                    result = calculate_price(params)
-                    config_summary = product["format_summary"](params)
+                    params_with_duration = params.copy()
+                    params_with_duration["duration"] = args.duration
+                    result = calculate_price(params_with_duration)
+                    config_summary = product["format_summary"](params_with_duration)
                     print(formatters.format_price_result(
                         product_name=product["display_name"],
                         config_summary=config_summary,

@@ -94,19 +94,21 @@ def _get_package_price(storage_class: str, redundancy_type: str, capacity: int, 
     # 根据时长选择价格
     if duration <= 1:
         return package["month"]
-    elif duration <= 6:
-        # 6个月以下按包月价格计算
+    elif duration == 6:
+        # 6个月，使用半年价格
+        return package.get("half_year") or package["month"] * 6
+    elif duration == 12:
+        # 1年，使用年价格（买9送3）
+        return package.get("year") or package["month"] * 12
+    elif duration < 6:
+        # 2-5个月，按包月价格计算
         return package["month"] * duration
-    elif duration <= 12:
-        # 6-12个月，使用半年价格
+    elif duration < 12:
+        # 7-11个月，半年价格 + 剩余月份包月价格
         half_year_price = package.get("half_year") or package["month"] * 6
-        if duration == 6:
-            return half_year_price
-        else:
-            # 半年价格 + 剩余月份包月价格
-            return half_year_price + package["month"] * (duration - 6)
+        return half_year_price + package["month"] * (duration - 6)
     else:
-        # 1年以上，使用年价格
+        # 1年以上，年价格 + 剩余月份
         year_price = package.get("year") or package["month"] * 12
         return year_price * (duration // 12) + package["month"] * (duration % 12)
 
