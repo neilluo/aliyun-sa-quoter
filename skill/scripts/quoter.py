@@ -380,7 +380,10 @@ def cmd_price(args):
 
         # Build modules
         try:
-            modules = product["build_modules"](params)
+            # 添加 billing 参数到 params
+            params_with_billing = params.copy()
+            params_with_billing["billing"] = args.billing
+            modules = product["build_modules"](params_with_billing)
         except Exception as e:
             print(f"错误: 参数构建失败: {e}")
             return 1
@@ -388,10 +391,27 @@ def cmd_price(args):
         # Check local calculation
         if _is_local_calculation_product(modules):
             try:
-                from products.bailian import calculate_price
-                result = calculate_price(params)
-                print(_format_bailian_price(result))
-                return 0
+                if product_code == "bailian":
+                    from products.bailian import calculate_price
+                    result = calculate_price(params)
+                    print(_format_bailian_price(result))
+                    return 0
+                elif product_code == "oss":
+                    from products.oss import calculate_price
+                    result = calculate_price(params)
+                    config_summary = product["format_summary"](params)
+                    print(formatters.format_price_result(
+                        product_name=product["display_name"],
+                        config_summary=config_summary,
+                        price_data=result,
+                        billing_method=args.billing,
+                        duration=args.duration if args.billing == "subscription" else None,
+                        quantity=args.quantity,
+                        region=args.region,
+                    ))
+                    return 0
+                else:
+                    raise ValueError(f"不支持本地计算的产品: {product_code}")
             except Exception as e:
                 print(f"错误: 价格计算失败: {e}")
                 return 1
