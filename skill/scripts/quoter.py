@@ -172,6 +172,30 @@ def _parse_params(params_str):
 
 def _query_single_sync(product_code, params, product, billing, region, duration, quantity):
     """Execute a single price query (synchronous version for batch)."""
+    # Check if product has custom get_price function (e.g., ECS)
+    if "get_price" in product:
+        result = product["get_price"](params)
+        
+        # Extract instance and disk prices from module_details
+        instance_price = 0
+        disk_price = 0
+        for md in result.get("module_details", []):
+            cost = md.get("cost_after_discount") or md.get("original_cost") or 0
+            if md["module_code"] == "InstanceType":
+                instance_price = float(cost)
+            elif md["module_code"] in ("SystemDisk", "DataDisk"):
+                disk_price += float(cost)
+        
+        return {
+            "type": "bss",
+            "config_summary": product["format_summary"](params),
+            "price_data": result,
+            "instance_price": instance_price,
+            "disk_price": disk_price,
+            "total": result.get("trade_amount", 0),
+            "original": result.get("original_amount", 0),
+        }
+    
     # 7. Build modules
     modules = product["build_modules"](params)
 
@@ -332,6 +356,27 @@ def cmd_price(args):
         if errors:
             print(format_error(ValidationError(errors)))
             return 1
+
+        # Check if product has custom get_price function (e.g., ECS)
+        if "get_price" in product:
+            try:
+                price_data = product["get_price"](params)
+                # Format output
+                config_summary = product["format_summary"](params)
+                result = formatters.format_price_result(
+                    product_name=product["display_name"],
+                    config_summary=config_summary,
+                    price_data=price_data,
+                    billing_method=args.billing,
+                    duration=args.duration if args.billing == "subscription" else None,
+                    quantity=args.quantity,
+                    region=args.region,
+                )
+                print(result)
+                return 0
+            except Exception as e:
+                print(f"错误: 询价失败: {e}")
+                return 1
 
         # Build modules
         try:

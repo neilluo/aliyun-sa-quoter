@@ -6,9 +6,15 @@ ProductType: None (ECS does not require ProductType)
 API docs: https://api.aliyun.com/document/BssOpenApi/2017-12-14/GetSubscriptionPrice
 """
 
+import sys
+from pathlib import Path
 from typing import Any, Dict, List
 
+# Ensure scripts directory is importable for ecs_client
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from ai_friendly.constants import Category, DiskType
+from ecs_client import get_instance_price
 
 
 def _extract_instance_family(instance_type: str) -> str:
@@ -121,6 +127,107 @@ def validate(params: Dict[str, Any]) -> List[str]:
     return errors
 
 
+def get_price(params: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Query ECS instance price via ECS DescribePrice API.
+    
+    Returns dict matching BSS API format:
+    {
+        "original_amount": float,
+        "discount_amount": float,
+        "trade_amount": float,
+        "currency": str,
+        "module_details": [...]
+    }
+    """
+    region = params.get("region", "cn-hangzhou")
+    instance_type = params["instance_type"]
+    image_os = params.get("image_os", "linux")
+    system_disk_category = params.get("system_disk_category", DiskType.ESSD)
+    system_disk_size = params.get("system_disk_size", 40)
+    data_disk_category = params.get("data_disk_category")
+    data_disk_size = params.get("data_disk_size", 0)
+    internet_bandwidth = params.get("internet_bandwidth", 0)
+    include_system_disk = params.get("include_system_disk", False)
+    duration = params.get("duration", 1)
+    
+    # Call ECS API to get price
+    result = get_instance_price(
+        region=region,
+        instance_type=instance_type,
+        platform=image_os,
+        system_disk_category=system_disk_category,
+        system_disk_size=system_disk_size,
+        period=duration,
+        price_unit="Month",
+        data_disk_category=data_disk_category,
+        data_disk_size=data_disk_size,
+        internet_max_bandwidth_out=internet_bandwidth,
+    )
+    
+    # Build module details
+    module_details = []
+    
+    # Instance type price
+    instance_price = result["details"].get("instanceType", 0)
+    module_details.append({
+        "module_code": "InstanceType",
+        "original_cost": instance_price,
+        "discount_cost": 0,
+        "invest_total_cost": 0,
+        "cost_after_discount": instance_price,
+    })
+    
+    # System disk price (if included)
+    system_disk_price = 0
+    if include_system_disk:
+        system_disk_price = result["details"].get("SystemDisk", 0)
+        module_details.append({
+            "module_code": "SystemDisk",
+            "original_cost": system_disk_price,
+            "discount_cost": 0,
+            "invest_total_cost": 0,
+            "cost_after_discount": system_disk_price,
+        })
+    
+    # Data disk price
+    data_disk_price = result["details"].get("DataDisk", 0)
+    if data_disk_price and int(data_disk_size) > 0:
+        module_details.append({
+            "module_code": "DataDisk",
+            "original_cost": data_disk_price,
+            "discount_cost": 0,
+            "invest_total_cost": 0,
+            "cost_after_discount": data_disk_price,
+        })
+    
+    # Internet bandwidth price
+    bandwidth_price = result["details"].get("InternetMaxBandwidthOut", 0)
+    if bandwidth_price and int(internet_bandwidth) > 0:
+        module_details.append({
+            "module_code": "InternetMaxBandwidthOut",
+            "original_cost": bandwidth_price,
+            "discount_cost": 0,
+            "invest_total_cost": 0,
+            "cost_after_discount": bandwidth_price,
+        })
+    
+    # Calculate total based on include_system_disk flag
+    if include_system_disk:
+        total_price = result["original_price"]
+    else:
+        # Only instance price (ECS API returns total including system disk)
+        total_price = instance_price
+    
+    return {
+        "original_amount": total_price,
+        "discount_amount": 0,
+        "trade_amount": total_price,
+        "currency": result["currency"],
+        "module_details": module_details,
+    }
+
+
 PRODUCT = {
     "code": "ecs",
     "name": "ECS",
@@ -212,4 +319,5 @@ PRODUCT = {
     "build_modules": build_modules,
     "format_summary": format_summary,
     "validate": validate,
+    "get_price": get_price,
 }
