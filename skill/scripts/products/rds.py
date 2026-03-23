@@ -5,12 +5,18 @@ ProductType: "rds" (standard), "bards" (Basic edition), "rords" (read-only)
 API docs: https://api.aliyun.com/document/BssOpenApi/2017-12-14/GetSubscriptionPrice
 """
 
+import sys
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
+
+# Ensure scripts directory is importable for rds_client
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from framework.builders import ModuleBuilder
 from framework.validators import ValidationRule, Validator
 from ai_friendly.constants import Region, Category, DiskType, ProductType, Engine
 from ai_friendly.types import ParamDef, ModuleSpec
+from rds_client import get_rds_price
 
 
 # =============================================================================
@@ -259,6 +265,73 @@ def validate(params: Dict[str, Any]) -> List[str]:
     return errors
 
 
+def get_price(params: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Query RDS instance price via RDS DescribePrice API.
+    
+    Returns dict matching BSS API format:
+    {
+        "original_amount": float,
+        "discount_amount": float,
+        "trade_amount": float,
+        "currency": str,
+        "module_details": [...]
+    }
+    """
+    region = params.get("region", Region.HANGZHOU)
+    engine = params["engine"]
+    engine_version = params["engine_version"]
+    instance_class = params["instance_class"]
+    storage_size = params.get("storage_size", 100)
+    duration = params.get("duration", 1)
+    
+    # Call RDS API to get price
+    result = get_rds_price(
+        region=region,
+        engine=engine,
+        engine_version=engine_version,
+        instance_class=instance_class,
+        storage_size=storage_size,
+        pay_type="Prepaid",
+        period=duration,
+        time_type="Month",
+    )
+    
+    # Build module details
+    module_details = []
+    
+    # Instance class price
+    instance_price = result["details"].get("DBInstanceClass", 0)
+    module_details.append({
+        "module_code": "DBInstanceClass",
+        "original_cost": instance_price,
+        "discount_cost": 0,
+        "invest_total_cost": 0,
+        "cost_after_discount": instance_price,
+    })
+    
+    # Storage price
+    storage_price = result["details"].get("DBInstanceStorage", 0)
+    if storage_price and storage_size > 0:
+        module_details.append({
+            "module_code": "DBInstanceStorage",
+            "original_cost": storage_price,
+            "discount_cost": 0,
+            "invest_total_cost": 0,
+            "cost_after_discount": storage_price,
+        })
+    
+    total_price = result["original_price"]
+    
+    return {
+        "original_amount": total_price,
+        "discount_amount": result["discount_price"],
+        "trade_amount": result["trade_price"],
+        "currency": result["currency"],
+        "module_details": module_details,
+    }
+
+
 # =============================================================================
 # EXPORT SECTION
 # =============================================================================
@@ -273,6 +346,7 @@ PRODUCT = {
     "build_modules": build_modules,
     "format_summary": format_summary,
     "validate": validate,
+    "get_price": get_price,
 }
 
 

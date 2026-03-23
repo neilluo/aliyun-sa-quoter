@@ -6,10 +6,16 @@ ProductType: "" (empty)
 API docs: https://api.aliyun.com/document/BssOpenApi/2017-12-14/GetSubscriptionPrice
 """
 
+import sys
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
+
+# Ensure scripts directory is importable for redis_client
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from ai_friendly.constants import Region, Category, DiskType, Architecture, Edition
 from ai_friendly.types import ParamDef, ModuleSpec
+from redis_client import get_redis_price
 
 
 def _get_product_type(params: Dict[str, Any]) -> str:
@@ -115,6 +121,71 @@ def validate(params: Dict[str, Any]) -> List[str]:
     return errors
 
 
+def get_price(params: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Query Redis instance price via Redis DescribePrice API.
+    
+    Returns dict matching BSS API format:
+    {
+        "original_amount": float,
+        "discount_amount": float,
+        "trade_amount": float,
+        "currency": str,
+        "module_details": [...]
+    }
+    """
+    region = params.get("region", Region.HANGZHOU)
+    instance_class = params.get("instance_class", "redis.master.small.default")
+    architecture = params.get("architecture", Architecture.STANDARD)
+    duration = params.get("duration", 1)
+    
+    # Parse capacity from instance class (e.g., "redis.master.small.default" -> 1024MB for 1GB)
+    # Default to 1024MB (1GB) if cannot parse
+    capacity = 1024
+    if "small" in instance_class:
+        capacity = 1024  # 1GB
+    elif "mid" in instance_class:
+        capacity = 2048  # 2GB
+    elif "large" in instance_class:
+        capacity = 4096  # 4GB
+    elif "2xlarge" in instance_class:
+        capacity = 8192  # 8GB
+    elif "4xlarge" in instance_class:
+        capacity = 16384  # 16GB
+    
+    # Call Redis API to get price
+    result = get_redis_price(
+        region=region,
+        instance_class=instance_class,
+        architecture=architecture,
+        capacity=capacity,
+        pay_type="Prepaid",
+        period=duration,
+        time_type="Month",
+    )
+    
+    # Build module details
+    module_details = []
+    
+    # Instance price
+    instance_price = result["original_price"]
+    module_details.append({
+        "module_code": "InstanceClass",
+        "original_cost": instance_price,
+        "discount_cost": result["discount_price"],
+        "invest_total_cost": 0,
+        "cost_after_discount": result["trade_price"],
+    })
+    
+    return {
+        "original_amount": result["original_price"],
+        "discount_amount": result["discount_price"],
+        "trade_amount": result["trade_price"],
+        "currency": result["currency"],
+        "module_details": module_details,
+    }
+
+
 PRODUCT = {
     "code": "redisa",
     "name": "Redis",
@@ -171,4 +242,5 @@ PRODUCT = {
     "build_modules": build_modules,
     "format_summary": format_summary,
     "validate": validate,
+    "get_price": get_price,
 }
