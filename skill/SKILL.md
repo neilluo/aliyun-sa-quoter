@@ -1,15 +1,34 @@
 ---
 name: aliyun-sa-quoter
 description: >
-  Query Alibaba Cloud product pricing via BSS OpenAPI. Supports 12 products including
-  ECS, RDS, MongoDB, Redis, SLB, EIP, OSS, NAS, CDN, WAF, RocketMQ, and Bailian LLM.
-  Use when the user wants to query, estimate, or compare Alibaba Cloud (aliyun) 
-  product prices, cost estimation, server quotes, or cloud resource budgeting.
+  Query Alibaba Cloud product pricing via BSS OpenAPI and product-specific DescribePrice APIs. 
+  Supports 12 products including ECS, RDS, MongoDB, Redis, SLB, EIP, OSS, NAS, CDN, WAF, 
+  RocketMQ, and Bailian LLM. Use when the user wants to query, estimate, or compare 
+  Alibaba Cloud (aliyun) product prices, cost estimation, server quotes, or cloud resource budgeting.
 ---
 
 # Alibaba Cloud Quoter
 
-Query real-time Alibaba Cloud product prices via BSS OpenAPI. Supports **12 products** across compute, database, network, storage, security, middleware, and AI.
+Query real-time Alibaba Cloud product prices via **BSS OpenAPI** and **product-specific DescribePrice APIs**. Supports **12 products** across compute, database, network, storage, security, middleware, and AI.
+
+## API Implementation Status
+
+| Product | API Used | Accuracy |
+|---------|----------|----------|
+| **ECS** | ECS DescribePrice API | ✅ High |
+| **RDS** | RDS DescribePrice API | ✅ High |
+| **Redis** | Redis DescribePrice API | ✅ High |
+| MongoDB | BSS OpenAPI | ⚠️ Medium |
+| SLB | BSS OpenAPI | ⚠️ Medium |
+| EIP | BSS OpenAPI | ⚠️ Medium |
+| OSS | BSS OpenAPI | ⚠️ Medium |
+| NAS | BSS OpenAPI | ⚠️ Medium |
+| CDN | BSS OpenAPI | ⚠️ Medium |
+| WAF | BSS OpenAPI | ⚠️ Medium |
+| RocketMQ | BSS OpenAPI | ⚠️ Medium |
+| Bailian | Local Calculation | ✅ High |
+
+**Note**: Products using DescribePrice API (ECS, RDS, Redis) provide more accurate pricing and real-time availability checking.
 
 ## Products Overview
 
