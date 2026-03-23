@@ -261,7 +261,7 @@ PRODUCT = {
             "label": "冗余类型",
             "type": "string",
             "required": False,
-            "default": "LRS",
+            "default": "ZRS",
             "choices": ["LRS", "ZRS"],
             "description": "LRS (本地冗余) / ZRS (同城冗余)",
             "examples": ["LRS", "ZRS"],
